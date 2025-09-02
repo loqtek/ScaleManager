@@ -1,0 +1,56 @@
+{
+  "expo": {
+    "name": "Scale Manager",
+    "slug": "scaleManager",
+    "version": "1.1.0",
+    "orientation": "portrait",
+    "icon": "./assets/images/noBgScaleManagerLogo.png",
+    "scheme": "myapp",
+    "userInterfaceStyle": "automatic",
+    "newArchEnabled": true,
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.scaleManager.scaleManager",
+      "appleTeamId": "PB5QFHF445",
+      "buildNumber": "2",
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      }
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/images/noBgScaleManagerLogo.png",
+        "backgroundColor": "#ffffff"
+      },
+      "package": "com.scaleManager.scaleManager"
+    },
+    "web": {
+      "bundler": "metro",
+      "output": "static",
+      "favicon": "./assets/images/noBgScaleManagerLogo.png"
+    },
+    "plugins": [
+      "expo-router",
+      [
+        "expo-splash-screen",
+        {
+          "image": "./assets/images/noBgScaleManagerLogo.png",
+          "imageWidth": 200,
+          "resizeMode": "contain",
+          "backgroundColor": "#ffffff"
+        }
+      ]
+    ],
+    "experiments": {
+      "typedRoutes": true
+    },
+    "extra": {
+      "router": {
+        "origin": false
+      },
+      "eas": {
+        "projectId": "a8b1e5fa-9a49-4ec0-af45-6de3e1240567"
+      }
+    }
+  }
+}
