@@ -11,6 +11,14 @@ needing a Web UI or using Headscales gRPC.
 This simple but useful app allows you to manage multiple headscale servers, their 
 pre-auth keys, users, API keys, devices, device registration and more all with one app.
 
+<p align="center">
+  <a href="https://apps.apple.com/us/app/scale-manager/id6751473022" target="_blank">
+    <img src="https://tools.applemediaservices.com/api/badges/download-on-the-app-store/black/en-us" alt="Download on the App Store" height="180">
+  </a>
+  <a href="">
+      Android Coming Soon
+  </a>
+</p>
 
 ## Features
 - Manage multiple servers
