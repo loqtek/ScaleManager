@@ -72,11 +72,11 @@ const handleSignOut = () => {
 
               await AsyncStorage.setItem("servers", JSON.stringify(updatedServers));
               await AsyncStorage.removeItem("selectedServer");
-
+              console.log(updatedServers.length)
               if (updatedServers.length === 0) {
-                router.replace("/");
+                router.push("/");
               } else {
-                router.replace("/accounts");
+                router.push("/accounts");
               }
             } else {
               await AsyncStorage.removeItem("selectedServer");

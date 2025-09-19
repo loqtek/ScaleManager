@@ -3,6 +3,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useRouter } from "expo-router";
 import Toast from "react-native-toast-message";
 import { testAPIKey } from "../api/login";
+import { parseVersion } from "../utils/getServer";
 
 export type HeadscaleVersion = "0.23.x" | "0.24.x" | "0.25.x" | "0.26.x";
 
@@ -93,6 +94,7 @@ export function useLogin() {
       });
       return;
     }
+    console.log(parseVersion(headscaleVersion))
 
     Toast.show({
       type: "success",
@@ -100,13 +102,12 @@ export function useLogin() {
       text1: "✅ Connected",
       text2: "Successfully connected to Headscale.",
     });
-
     const newEntry = {
       name: customName.trim(),
       server: server.trim(),
       apiKey: apiKey.trim(),
       addedOn: new Date().toISOString(),
-      version: headscaleVersion
+      version: parseVersion(headscaleVersion)
     };
 
     const existing = await AsyncStorage.getItem("servers");

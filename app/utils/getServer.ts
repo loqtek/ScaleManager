@@ -15,3 +15,12 @@ export async function getServerConfig() {
     return null;
   }
 }
+
+
+export function parseVersion(version: string): string {
+  return version.replace(/^v/, "")        // drop leading "v"
+                .replace(/\.$/, "")       // drop trailing "."
+                .split(".")               // split parts
+                .slice(0, 2)              // keep major.minor
+                .join(".");
+}

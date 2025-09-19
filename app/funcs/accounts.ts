@@ -3,6 +3,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useRouter } from "expo-router";
 import Toast from "react-native-toast-message";
 import { testAPIKey } from "../api/login";
+import { parseVersion } from "../utils/getServer";
 
 export type HeadscaleVersion = "0.23.x" | "0.24.x" | "0.25.x" | "0.26.x";
 
@@ -11,7 +12,7 @@ interface ServerAccount {
   server: string;
   apiKey: string;
   addedOn: string;
-  version: HeadscaleVersion;
+  version: string;
 }
 
 interface AddAccountParams {
@@ -33,7 +34,7 @@ export function useAccountsManager() {
       const serversJson = await AsyncStorage.getItem("servers");
       if (serversJson) {
         const parsedAccounts = JSON.parse(serversJson);
-        // Ensure backward compatibility - add default version if missing
+        // add default version if missing
         const accountsWithVersion = parsedAccounts.map((account: any) => ({
           ...account,
           version: account.version || "0.26.x" as HeadscaleVersion
@@ -169,7 +170,7 @@ export function useAccountsManager() {
       server: server.trim(),
       apiKey: apiKey.trim(),
       addedOn: new Date().toISOString(),
-      version: version,
+      version: parseVersion(version),
     };
 
     const updated = [...parsed, newEntry];
@@ -194,7 +195,7 @@ export function useAccountsManager() {
     const servers: ServerAccount[] = JSON.parse(serversJson);
     const updated = servers.map(server => 
       server.name === accountName 
-        ? { ...server, version: newVersion }
+        ? { ...server, version: parseVersion(newVersion) }
         : server
     );
 
