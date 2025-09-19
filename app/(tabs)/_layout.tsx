@@ -82,22 +82,22 @@ export default function TabLayout() {
         }}
       />
 
-      {!hideRoutes && (
-        <Tabs.Screen
-          name="routes"
-          options={{
-            title: "Routes",
-            headerShown: false,
-            tabBarIcon: ({ color }) => (
-              <MaterialCommunityIcons
-                name="router-network"
-                color={color}
-                size={26}
-              />
-            ),
-          }}
-        />
-      )}
+      <Tabs.Screen
+        name="routes"
+        options={{
+          title: "Routes",
+          headerShown: false,
+          // Hide the tab completely when hideRoutes is true
+          href: hideRoutes ? null : '/routes',
+          tabBarIcon: ({ color }) => (
+            <MaterialCommunityIcons
+              name="router-network"
+              color={color}
+              size={26}
+            />
+          ),
+        }}
+      />
     </Tabs>
   );
 }
