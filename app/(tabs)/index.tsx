@@ -7,6 +7,8 @@ import {
   ActivityIndicator,
   ScrollView,
   RefreshControl,
+  Linking,
+  Alert,
 } from "react-native";
 import { useRouter } from "expo-router";
 import { FontAwesome, MaterialIcons, Ionicons } from "@expo/vector-icons";
@@ -36,6 +38,36 @@ export default function IndexScreen() {
     router.push("/accounts");
   };
 
+  const handleGitHub = async () => {
+    const url = "https://github.com/loqtek/ScaleManager/issues";
+    const supported = await Linking.canOpenURL(url);
+    
+    if (supported) {
+      await Linking.openURL(url);
+    } else {
+      Alert.alert(
+        "Cannot Open Link",
+        "Unable to open GitHub. Please visit: https://github.com/loqtek/ScaleManager/issues",
+        [{ text: "OK" }]
+      );
+    }
+  };
+
+  const handleStarRepo = async () => {
+    const url = "https://github.com/loqtek/ScaleManager";
+    const supported = await Linking.canOpenURL(url);
+    
+    if (supported) {
+      await Linking.openURL(url);
+    } else {
+      Alert.alert(
+        "Cannot Open Link",
+        "Unable to open GitHub. Please visit: https://github.com/loqtek/ScaleManager",
+        [{ text: "OK" }]
+      );
+    }
+  };
+
   useEffect(() => {
     measurePing();
     fetchData();
@@ -46,6 +78,7 @@ export default function IndexScreen() {
       <ScrollView
         className="flex-1 px-4 pt-4"
         refreshControl={<RefreshControl refreshing={loading} onRefresh={onRefresh} />}
+        contentContainerStyle={{ paddingBottom: 40 }}
       >
         <View className="absolute top-2 right-2 flex-row space-x-4">
           <TouchableOpacity onPress={handleAccounts} className="p-1">
@@ -127,6 +160,51 @@ export default function IndexScreen() {
                 </Text>
               </TouchableOpacity>
             ))}
+          </View>
+        </View>
+
+        {/* GitHub Footer Section */}
+        <View className="pt-8 pb-4">
+          <View className="bg-zinc-800 rounded-xl p-6 border border-zinc-700">
+            <View className="items-center mb-4">
+              <FontAwesome name="github" size={32} color="#60a5fa" />
+              <Text className="text-white text-lg font-bold mt-2">
+                Help Improve Scale Manager
+              </Text>
+            </View>
+            
+            <Text className="text-slate-300 text-center mb-6 leading-6">
+              Found a bug or have a feature idea? We'd love to hear from you! 
+              Your feedback helps make this app better for everyone.
+            </Text>
+            
+            <View className="space-y-2">
+              <TouchableOpacity
+                onPress={handleGitHub}
+                className="bg-blue-600 py-3 px-4 rounded-lg flex-row items-center justify-center mb-2"
+                activeOpacity={0.8}
+              >
+                <MaterialIcons name="bug-report" size={18} color="white" />
+                <Text className="text-white font-semibold ml-2">
+                  Report Issues & Suggestions
+                </Text>
+              </TouchableOpacity>
+              
+              <TouchableOpacity
+                onPress={handleStarRepo}
+                className="bg-zinc-700 py-3 px-4 rounded-lg flex-row items-center justify-center border border-zinc-600"
+                activeOpacity={0.8}
+              >
+                <FontAwesome name="star" size={16} color="#fbbf24" />
+                <Text className="text-slate-200 font-semibold ml-2">
+                  Star on GitHub
+                </Text>
+              </TouchableOpacity>
+            </View>
+            
+            <Text className="text-slate-400 text-xs text-center mt-4">
+              github.com/loqtek/ScaleManager
+            </Text>
           </View>
         </View>
       </ScrollView>
