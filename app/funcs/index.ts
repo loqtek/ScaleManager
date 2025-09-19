@@ -4,14 +4,22 @@ import { useRouter } from "expo-router";
 import Toast from "react-native-toast-message";
 import { testAPIKey } from "../api/login";
 
+export type HeadscaleVersion = "0.23.x" | "0.24.x" | "0.25.x" | "0.26.x";
+
 export function useLogin() {
   const router = useRouter();
 
   const [customName, setCustomName] = useState("");
   const [server, setServer] = useState("");
   const [apiKey, setApiKey] = useState("");
-  const [showInfo, setShowInfo] = useState("");
+  const [headscaleVersion, setHeadscaleVersion] = useState<HeadscaleVersion>("0.26.x");
+  const [showInfo, setShowInfo] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+
+  // Toggle info display - close if same item clicked, open if different
+  const toggleInfo = (field: string) => {
+    setShowInfo(showInfo === field ? null : field);
+  };
 
   const checkForPreviousKey = async () => {
     setLoading(true);
@@ -67,11 +75,12 @@ export function useLogin() {
       });
       return;
     }
+    
     let isValid = false
     // temp for apple login demo, will do nothing
-    if (server === "https://appledemo.login.ieouiudhmpac.com" && apiKey ==="WlEB2D3t4fdash89LQW65KDsaD9oq0d2npso78uJolmOod2jp7"){
+    if (server === "https://appledemo.login.ieouiudhmpac.com" && apiKey === "WlEB2D3t4fdash89LQW65KDsaD9oq0d2npso78uJolmOod2jp7"){
       isValid = true
-    }else{
+    } else {
       isValid = await testAPIKey(server, apiKey);
     }
 
@@ -97,6 +106,7 @@ export function useLogin() {
       server: server.trim(),
       apiKey: apiKey.trim(),
       addedOn: new Date().toISOString(),
+      version: headscaleVersion
     };
 
     const existing = await AsyncStorage.getItem("servers");
@@ -126,8 +136,10 @@ export function useLogin() {
     setServer,
     apiKey,
     setApiKey,
+    headscaleVersion,
+    setHeadscaleVersion,
     showInfo,
-    setShowInfo,
+    toggleInfo,
     loading,
     checkForPreviousKey,
     handleLogin,
