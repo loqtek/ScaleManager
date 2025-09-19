@@ -16,7 +16,7 @@ export const usePreAuthManager = () => {
 
     const allKeys: Record<string, any[]> = {};
     for (const user of userList) {
-      const keysRes = await getPreAuthKeys(user.name);
+      const keysRes = await getPreAuthKeys(user.id);
       allKeys[user.name] = keysRes.preAuthKeys || [];
     }
     setPreAuthKeys(allKeys);

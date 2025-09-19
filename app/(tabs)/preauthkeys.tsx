@@ -58,7 +58,7 @@ export default function preauthKeysScreen() {
                         <TouchableOpacity
                           className={`${expired ? "bg-zinc-500" : "bg-red-600"} mt-2 p-2 rounded-md`}
                           disabled={expired}
-                          onPress={() => handleExpireKey(key.key, user.name)}
+                          onPress={() => handleExpireKey(key.key, user.id)}
                         >
                           <Text className="text-white text-center text-sm font-semibold">
                             {expired ? "Expire Key (expired)" : "Expire Key"}
@@ -93,7 +93,7 @@ export default function preauthKeysScreen() {
                       className="bg-green-600 p-3 rounded-md"
                       onPress={() =>
                         handleCreateKey(
-                          user.name,
+                          user.id,
                           expireTimeMap[user.name] || "1h",
                           reusableMap[user.name] || false
                         )
