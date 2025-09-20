@@ -1,110 +1,51 @@
-import { getServerConfig } from "../utils/getServer";
-
-
+import { getApiEndpoints, makeApiRequest } from "../utils/apiUtils";
 
 export async function getServerRoutes() {
-    try {
-        const serverConf = await getServerConfig();
+  const config = await getApiEndpoints();
+  if (!config) return null;
 
-        if (!serverConf) {
-            console.error("No server configuration found");
-            return null;
-        }
+  const { endpoints } = config;
+  
+  try {
+    const data = await makeApiRequest(endpoints.routes.get, { method: 'GET' });
+    return data;
+  } catch (error) {
+    console.error("Failed to fetch routes:", error);
+    return null;
+  }
+}
 
-        const server = serverConf.server;
-        const authKey = serverConf.apiKey;
+export async function updateRoute(id: string, enabled: boolean) {
+  const config = await getApiEndpoints();
+  if (!config) return null;
 
-        var url = `${server}/api/v1/routes`;
+  const { endpoints } = config;
+  
+  try {
+    const apiCall = endpoints.routes.update(id, enabled);
+    
+    const requestOptions: RequestInit = {
+      method: apiCall.method,
+    };
 
-        const response = await fetch(url, {
-            method: 'GET',
-            headers: {
-                'Accept': 'application/json',
-                'Authorization': `Bearer ${authKey}`,
-            },
-        });
-
-        const data = await response.json();
-
-        if (!response.ok) {
-            data.status = false;
-            return data;
-        }
-
-        return data;
-    } catch (error) {
-        console.error("Fetch error:", error);
-        return null;
+    // Add body if provided by the API call
+    if (apiCall.body) {
+      requestOptions.body = JSON.stringify(apiCall.body);
     }
+
+    const data = await makeApiRequest(apiCall.url, requestOptions);
+    return data;
+  } catch (error) {
+    console.error("Failed to update route:", error);
+    return null;
+  }
+}
+
+// Convenience wrappers for old-style enable/disable
+export async function enableRoute(id: string) {
+  return updateRoute(id, true);
 }
 
 export async function disableRoute(id: string) {
-    try {
-        const serverConf = await getServerConfig();
-
-        if (!serverConf) {
-            console.error("No server configuration found");
-            return null;
-        }
-
-        const server = serverConf.server;
-        const authKey = serverConf.apiKey;
-
-        var url = `${server}/api/v1/routes/${id}/disable`;
-
-        const response = await fetch(url, {
-            method: 'POST',
-            headers: {
-                'Accept': 'application/json',
-                'Authorization': `Bearer ${authKey}`,
-            },
-        });
-
-        const data = await response.json();
-
-        if (!response.ok) {
-            data.status = false;
-            return data;
-        }
-
-        return data;
-    } catch (error) {
-        console.error("Fetch error:", error);
-        return null;
-    }
-}
-
-export async function enableRoute(id: string) {
-    try {
-        const serverConf = await getServerConfig();
-
-        if (!serverConf) {
-            console.error("No server configuration found");
-            return null;
-        }
-
-        const server = serverConf.server;
-        const authKey = serverConf.apiKey;
-
-        var url = `${server}/api/v1/routes/${id}/enable`;
-
-        const response = await fetch(url, {
-            method: 'POST',
-            headers: {
-                'Accept': 'application/json',
-                'Authorization': `Bearer ${authKey}`,
-            },
-        });
-        const data = await response.json();
-
-        if (!response.ok) {
-            data.status = false;
-            return data;
-        }
-
-        return data;
-    } catch (error) {
-        console.error("Fetch error:", error);
-        return null;
-    }
+  return updateRoute(id, false);
 }

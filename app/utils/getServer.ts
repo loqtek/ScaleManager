@@ -3,7 +3,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 export async function getServerConfig() {
   const selectedName = await AsyncStorage.getItem("selectedServer");
   const serversJson = await AsyncStorage.getItem("servers");
-
+  //console.log(serversJson)
   if (!selectedName || !serversJson) return null;
 
   try {
@@ -14,4 +14,13 @@ export async function getServerConfig() {
     console.error("Error parsing server config:", err);
     return null;
   }
+}
+
+
+export function parseVersion(version: string): string {
+  return version.replace(/^v/, "")        // drop leading "v"
+                .replace(/\.$/, "")       // drop trailing "."
+                .split(".")               // split parts
+                .slice(0, 2)              // keep major.minor
+                .join(".");
 }

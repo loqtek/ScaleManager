@@ -74,9 +74,9 @@ const handleSignOut = () => {
               await AsyncStorage.removeItem("selectedServer");
 
               if (updatedServers.length === 0) {
-                router.replace("/");
+                router.push("/");
               } else {
-                router.replace("/accounts");
+                router.push("/accounts");
               }
             } else {
               await AsyncStorage.removeItem("selectedServer");

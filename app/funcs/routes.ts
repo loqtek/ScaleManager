@@ -46,7 +46,6 @@ export function useRoutes() {
       fetchRoutes();
 
     } else {
-      console.log(result)
       Toast.show({
         type: "error",
         position: "top",

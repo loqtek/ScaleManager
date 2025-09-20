@@ -1,0 +1,672 @@
+{
+	"info": {
+		"_postman_id": "deec55ea-279a-43c9-a16e-1cb2b123cb8e",
+		"name": "Headscale API",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "00000000"
+	},
+	"item": [
+		{
+			"name": "0.26.x",
+			"item": []
+		},
+		{
+			"name": "0.23.x",
+			"item": [
+				{
+					"name": "apikeys",
+					"item": [
+						{
+							"name": "getAPIKeys",
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{apiKey}}",
+										"type": "text"
+									}
+								],
+								"url": {
+									"raw": "{{server_host}}/api/v1/apikey",
+									"host": [
+										"{{server_host}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"apikey"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "createAPIKey",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{apiKey}}",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n    \"expiration\": \"1\"\r\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{server_host}}/api/v1/apikey",
+									"host": [
+										"{{server_host}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"apikey"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "expireAPIKey",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{apiKey}}",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n    \"prefix\": \"c8txwmbA_Q\"\r\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{server_host}}/api/v1/apikey/expire",
+									"host": [
+										"{{server_host}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"apikey",
+										"expire"
+									]
+								}
+							},
+							"response": []
+						}
+					],
+					"description": "createAPIKey with no expire tiem defined returns a api key like string but doesnt register in headscale istelf it seems?"
+				},
+				{
+					"name": "devices",
+					"item": [
+						{
+							"name": "getDevices",
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{apiKey}}",
+										"type": "text"
+									}
+								],
+								"url": {
+									"raw": "{{server_host}}/api/v1/node",
+									"host": [
+										"{{server_host}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"node"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "registerDevice",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{apiKey}}",
+										"type": "text"
+									}
+								],
+								"url": {
+									"raw": "{{server_host}}/api/v1/node/register?user=${user}&key=${key}",
+									"host": [
+										"{{server_host}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"node",
+										"register"
+									],
+									"query": [
+										{
+											"key": "user",
+											"value": "${user}"
+										},
+										{
+											"key": "key",
+											"value": "${key}"
+										}
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "renameDevice",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{apiKey}}",
+										"type": "text"
+									}
+								],
+								"url": {
+									"raw": "{{server_host}}/api/v1/node/${id}/rename/${newName}",
+									"host": [
+										"{{server_host}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"node",
+										"${id}",
+										"rename",
+										"${newName}"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "deleteDevice",
+							"request": {
+								"method": "DELETE",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{apiKey}}",
+										"type": "text"
+									}
+								],
+								"url": {
+									"raw": "{{server_host}}/api/v1/node/${id}",
+									"host": [
+										"{{server_host}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"node",
+										"${id}"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "addTags",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{apiKey}}",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n    \"tags\":[]\r\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{server_host}}/api/v1/node/${id}/tags",
+									"host": [
+										"{{server_host}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"node",
+										"${id}",
+										"tags"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "changeUser",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{apiKey}}",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n    \"tags\":[]\r\n}"
+								},
+								"url": {
+									"raw": "{{server_host}}/api/v1/node/${id}/user?user=${user}",
+									"host": [
+										"{{server_host}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"node",
+										"${id}",
+										"user"
+									],
+									"query": [
+										{
+											"key": "user",
+											"value": "${user}"
+										}
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "misc",
+					"item": []
+				},
+				{
+					"name": "preauthkeys",
+					"item": [
+						{
+							"name": "getPreAuthKeys",
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{apiKey}}",
+										"type": "text"
+									}
+								],
+								"url": {
+									"raw": "{{server_host}}/api/v1/preauthkey?user=${user}",
+									"host": [
+										"{{server_host}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"preauthkey"
+									],
+									"query": [
+										{
+											"key": "user",
+											"value": "${user}"
+										}
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "createPreAuthKey",
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{apiKey}}",
+										"type": "text"
+									}
+								],
+								"url": {
+									"raw": "{{server_host}}/api/v1/preauthkey",
+									"host": [
+										"{{server_host}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"preauthkey"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "expirePreAuthKey",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{apiKey}}",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n    \"user\": \"\",\r\n    \"key\": \"\"\r\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{server_host}}/api/v1/preauthkey/expire",
+									"host": [
+										"{{server_host}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"preauthkey",
+										"expire"
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "routes",
+					"item": [
+						{
+							"name": "getServerRoutes",
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{apiKey}}",
+										"type": "text"
+									}
+								],
+								"url": {
+									"raw": "{{server_host}}/api/v1/routes",
+									"host": [
+										"{{server_host}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"routes"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "disableRoute",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{apiKey}}",
+										"type": "text"
+									}
+								],
+								"url": {
+									"raw": "{{server_host}}/api/v1/routes/${id}/disable",
+									"host": [
+										"{{server_host}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"routes",
+										"${id}",
+										"disable"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "enableRoute",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{apiKey}}",
+										"type": "text"
+									}
+								],
+								"url": {
+									"raw": "{{server_host}}/api/v1/routes/${id}/enable",
+									"host": [
+										"{{server_host}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"routes",
+										"${id}",
+										"enable"
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "users",
+					"item": [
+						{
+							"name": "getUsers",
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{apiKey}}",
+										"type": "text"
+									}
+								],
+								"url": {
+									"raw": "{{server_host}}/api/v1/user",
+									"host": [
+										"{{server_host}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"user"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "getUserInfo",
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{apiKey}}",
+										"type": "text"
+									}
+								],
+								"url": {
+									"raw": "{{server_host}}/api/v1/user/${userName}",
+									"host": [
+										"{{server_host}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"user",
+										"${userName}"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "addUser",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{apiKey}}",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n    \"name\": \"name\"\r\n    \r\n    }",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{server_host}}/api/v1/user",
+									"host": [
+										"{{server_host}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"user"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "deleteUser",
+							"request": {
+								"method": "DELETE",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{apiKey}}",
+										"type": "text"
+									}
+								],
+								"url": {
+									"raw": "{{server_host}}/api/v1/user/${userId}",
+									"host": [
+										"{{server_host}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"user",
+										"${userId}"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "renameUser",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{apiKey}}",
+										"type": "text"
+									}
+								],
+								"url": {
+									"raw": "{{server_host}}/api/v1/user/${oldName}/rename/${newName}",
+									"host": [
+										"{{server_host}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"user",
+										"${oldName}",
+										"rename",
+										"${newName}"
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				}
+			]
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"packages": {},
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"packages": {},
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "server_host",
+			"value": ""
+		},
+		{
+			"key": "apiKey",
+			"value": ""
+		}
+	]
+}

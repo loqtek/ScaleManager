@@ -42,58 +42,72 @@ export function useApiKeys() {
     }
   };
 
-  const handleCreateKey = async () => {
-    if (!newKeyExpire) {
-      Toast.show({
-        type: "error",
-        position: "top",
-        text1: "⚠️ Expiration Time Required",
-        text2: "Please provide an expiration time (e.g. 24h or 7d)",
-      });
-      return;
-    }
+const handleCreateKey = async () => {
+  if (!newKeyExpire.trim()) {
+    Toast.show({
+      type: "error",
+      position: "top",
+      text1: "⚠️ Expiration Required",
+      text2: "Please enter an expiration time",
+    });
+    return null;
+  }
 
-    const regex = /^(0|[1-9]\d*)([smhd])$/;
-    if (!regex.test(newKeyExpire)) {
-      Toast.show({
-        type: "error",
-        position: "top",
-        text1: "⚠️ Invalid Expiration Time",
-        text2: "Please enter a valid expiration time (e.g. 24h, 7d)",
-      });
-      return;
-    }
+  // Validate expiration format
+  const regex = /^(0|[1-9]\d*)([smhdy])$/;
+  if (!regex.test(newKeyExpire)) {
+    Toast.show({
+      type: "error",
+      position: "top",
+      text1: "⚠️ Invalid Format",
+      text2: "Use format like: 24h, 7d, 30d, 1y",
+    });
+    return null;
+  }
 
-    const expirationDate = calculateExpirationDate(newKeyExpire);
-    if (!expirationDate) {
-      Toast.show({
-        type: "error",
-        position: "top",
-        text1: "⚠️ Invalid Expiration Time",
-        text2: "Failed to calculate expiration date.",
-      });
-      return;
-    }
-
-    const result = await createAPIKey(expirationDate);
-    if (result) {
+  try {
+    // Convert expiration to timestamp format your API expects
+    const expirationTimestamp = calculateExpirationDate(newKeyExpire);
+    
+    // Call your API to create the key
+    const result = await createAPIKey(expirationTimestamp);
+    
+    if (result && result.apiKey) {
       Toast.show({
         type: "success",
         position: "top",
-        text1: "✅ Key Created",
-        text2: "API Key Created Successfully",
+        text1: "✅ API Key Created",
+        text2: "New API key generated successfully",
       });
-      setNewKeyExpire("");
+      
+      // Refresh the keys list
       await fetchApiKeys();
+      
+      // Clear the input
+      setNewKeyExpire("");
+      
+      // Return the result so the component can display the key
+      return result;
     } else {
       Toast.show({
         type: "error",
         position: "top",
-        text1: "⚠️ Failed to Create Key",
-        text2: "Failed to create API key.",
+        text1: "❌ Creation Failed",
+        text2: "Failed to create API key",
       });
+      return null;
     }
-  };
+  } catch (error) {
+    console.error("Error creating API key:", error);
+    Toast.show({
+      type: "error",
+      position: "top",
+      text1: "❌ Creation Failed",
+      text2: "An error occurred while creating the key",
+    });
+    return null;
+  }
+};
 
   const handleExpireKey = async (prefix: string) => {
     const result = await expireAPIKey(prefix);
