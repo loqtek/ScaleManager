@@ -5,7 +5,6 @@ export async function getPreAuthKeys(userIdentifier?: string) {
   if (!config) return null;
 
   const { endpoints } = config;
-  console.log(userIdentifier)
   const apiCall = endpoints.preauthkeys.get(userIdentifier);
   
   return await makeApiRequest(apiCall.url, {

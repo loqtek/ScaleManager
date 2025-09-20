@@ -94,7 +94,6 @@ export function useLogin() {
       });
       return;
     }
-    console.log(parseVersion(headscaleVersion))
 
     Toast.show({
       type: "success",

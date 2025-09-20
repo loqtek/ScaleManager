@@ -13,7 +13,6 @@ export const usePreAuthManager = () => {
 
   // Helper function to get the correct user identifier based on API version
   const getUserIdentifier = (user: any, version: string): string => {
-    console.log('Getting identifier for user:', user, 'with version:', version);
     
     // Check if this is v0.26 or higher
     if (version && (version.startsWith('0.26'))) {
@@ -50,11 +49,9 @@ export const usePreAuthManager = () => {
         const userIdentifier = getUserIdentifier(user, detectedVersion);
         const userKey = getUserKey(user);
         
-        console.log(`Fetching keys for user ${userKey} with identifier ${userIdentifier}`);
         
         try {
           const keysRes = await getPreAuthKeys(userIdentifier);
-          console.log(`Keys response for ${userKey}:`, keysRes);
           allKeys[userKey] = keysRes?.preAuthKeys || [];
         } catch (error) {
           console.error(`Failed to fetch preauth keys for user ${userKey}:`, error);
@@ -106,7 +103,6 @@ export const usePreAuthManager = () => {
         text2: `Key expired successfully.`,
       });
       
-      // Refresh keys for this user
       try {
         fetchData();
       } catch (error) {
@@ -159,7 +155,6 @@ export const usePreAuthManager = () => {
     }
 
     const userIdentifier = getUserIdentifier(user, apiVersion);
-    console.log(`Creating key for user ${userName} with identifier ${userIdentifier}`);
     
     const result = await createPreAuthKey(userIdentifier, expirationDate, reusable);
     
@@ -171,7 +166,6 @@ export const usePreAuthManager = () => {
         text2: `Key created successfully for ${userName}.`,
       });
       
-      // Refresh keys for this user
       try {
         fetchData()
       } catch (error) {
