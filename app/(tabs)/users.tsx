@@ -166,7 +166,7 @@ export default function UsersScreen() {
                   <View className="flex-row space-x-3 ">
                     <TouchableOpacity
                       onPress={() => handleRenameUser(user.name)}
-                      className="flex-1 bg-yellow-600 py-2 rounded-lg flex-row items-center justify-center"
+                      className="flex-1 bg-yellow-600 py-2 rounded-lg flex-row items-center justify-center mr-2"
                     >
                       <MaterialIcons name="edit" size={16} color="white" />
                       <Text className="text-white font-semibold ml-1">Rename</Text>
@@ -174,7 +174,7 @@ export default function UsersScreen() {
 
                     <TouchableOpacity
                       onPress={() => confirmDelete(user)}
-                      className="flex-1 bg-red-600 py-2  rounded-lg flex-row items-center justify-center"
+                      className="flex-1 bg-red-600 py-2  rounded-lg flex-row items-center justify-center ml-2"
                     >
                       <MaterialIcons name="delete" size={16} color="white" />
                       <Text className="text-white font-semibold ml-1">Delete</Text>

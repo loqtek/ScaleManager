@@ -3,7 +3,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 export async function getServerConfig() {
   const selectedName = await AsyncStorage.getItem("selectedServer");
   const serversJson = await AsyncStorage.getItem("servers");
-  console.log(serversJson)
+  //console.log(serversJson)
   if (!selectedName || !serversJson) return null;
 
   try {

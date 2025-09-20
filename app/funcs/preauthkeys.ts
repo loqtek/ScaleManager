@@ -9,14 +9,20 @@ export const usePreAuthManager = () => {
   const [users, setUsers] = useState([]);
   const [preAuthKeys, setPreAuthKeys] = useState({});
   const [loading, setLoading] = useState(true);
-  const [apiVersion, setApiVersion] = useState<string>('v0.26'); // Track API version
+  const [apiVersion, setApiVersion] = useState<string>('');
 
   // Helper function to get the correct user identifier based on API version
-  const getUserIdentifier = (user: any): string => {
-    if (apiVersion.startsWith('v0.26')) {
-      return user.id?.toString() || user.name; // Use ID for 0.26+, fallback to name
+  const getUserIdentifier = (user: any, version: string): string => {
+    console.log('Getting identifier for user:', user, 'with version:', version);
+    
+    // Check if this is v0.26 or higher
+    if (version && (version.startsWith('0.26'))) {
+      // For v0.26, return user ID as string (API will convert to number)
+      const userId = user.id ? user.id.toString() : user.name;
+      return userId;
     } else {
-      return user.name; // Use name for 0.23, 0.24, 0.25
+      // For older versions, use name
+      return user.name;
     }
   };
 
@@ -27,41 +33,47 @@ export const usePreAuthManager = () => {
   };
 
   const fetchData = async () => {
-    // Get API version first
-    const config = await getApiEndpoints();
-    if (config) {
-      // Determine version from server config
-      const serverVersion = config.serverConf.version;
-      if (serverVersion?.startsWith('0.26')) {
-        setApiVersion('v0.26');
-      } else if (serverVersion?.startsWith('0.25')) {
-        setApiVersion('v0.25');
-      } else if (serverVersion?.startsWith('0.24')) {
-        setApiVersion('v0.24');
-      } else {
-        setApiVersion('v0.23');
-      }
-    }
+    try {
+      const config = await getApiEndpoints();
+      const detectedVersion = config?.serverConf?.version || '0.23.x';
+      setApiVersion(detectedVersion);
 
-    const usersRes = await getUsers();
-    const userList = usersRes?.users || [];
-    setUsers(userList);
+      // Now fetch users
+      const usersRes = await getUsers();
+      const userList = usersRes?.users || [];
+      setUsers(userList);
 
-    const allKeys: Record<string, any[]> = {};
-    for (const user of userList) {
-      const userIdentifier = getUserIdentifier(user);
-      const userKey = getUserKey(user);
+      // Fetch preauth keys for each user using the correct identifier
+      const allKeys: Record<string, any[]> = {};
       
-      try {
-        const keysRes = await getPreAuthKeys(userIdentifier);
-        allKeys[userKey] = keysRes?.preAuthKeys || [];
-      } catch (error) {
-        console.error(`Failed to fetch preauth keys for user ${userKey}:`, error);
-        allKeys[userKey] = [];
+      for (const user of userList) {
+        const userIdentifier = getUserIdentifier(user, detectedVersion);
+        const userKey = getUserKey(user);
+        
+        console.log(`Fetching keys for user ${userKey} with identifier ${userIdentifier}`);
+        
+        try {
+          const keysRes = await getPreAuthKeys(userIdentifier);
+          console.log(`Keys response for ${userKey}:`, keysRes);
+          allKeys[userKey] = keysRes?.preAuthKeys || [];
+        } catch (error) {
+          console.error(`Failed to fetch preauth keys for user ${userKey}:`, error);
+          allKeys[userKey] = [];
+        }
       }
+      
+      setPreAuthKeys(allKeys);
+    } catch (error) {
+      console.error("Error in fetchData:", error);
+      Toast.show({
+        type: "error",
+        position: "top",
+        text1: "⚠️ Fetch Error",
+        text2: "Failed to load preauth keys data",
+      });
+    } finally {
+      setLoading(false);
     }
-    setPreAuthKeys(allKeys);
-    setLoading(false);
   };
 
   useEffect(() => {
@@ -70,7 +82,7 @@ export const usePreAuthManager = () => {
 
   const handleExpireKey = async (keyId: string, userName: string) => {
     // Find the user object to get the correct identifier
-    const user = users.find((u: any) => u.name === userName);
+    const user = users.find((u: any) => u.name === userName || u.id === userName);
     if (!user) {
       Toast.show({
         type: "error",
@@ -81,7 +93,9 @@ export const usePreAuthManager = () => {
       return;
     }
 
-    const userIdentifier = getUserIdentifier(user);
+    const userIdentifier = getUserIdentifier(user, apiVersion);
+    console.log(`Expiring key ${keyId} for user ${userName} with identifier ${userIdentifier}`);
+    
     const result = await expirePreAuthKey(userIdentifier, keyId);
     
     if (result) {
@@ -89,16 +103,12 @@ export const usePreAuthManager = () => {
         type: "success",
         position: "top",
         text1: "Key Expired",
-        text2: `Key ${keyId} expired successfully.`,
+        text2: `Key expired successfully.`,
       });
       
       // Refresh keys for this user
       try {
-        const keysRes = await getPreAuthKeys(userIdentifier);
-        setPreAuthKeys((prev) => ({ 
-          ...prev, 
-          [userName]: keysRes?.preAuthKeys || [] 
-        }));
+        fetchData();
       } catch (error) {
         console.error("Failed to refresh preauth keys:", error);
       }
@@ -107,7 +117,7 @@ export const usePreAuthManager = () => {
         type: "error",
         position: "top",
         text1: "Failed to Expire Key",
-        text2: `Failed to expire key ${keyId}.`,
+        text2: `Failed to expire key.`,
       });
     }
   };
@@ -137,7 +147,7 @@ export const usePreAuthManager = () => {
     }
 
     // Find the user object to get the correct identifier
-    const user = users.find((u: any) => u.name === userName);
+    const user = users.find((u: any) => u.name === userName || u.id === userName)  ;
     if (!user) {
       Toast.show({
         type: "error",
@@ -148,7 +158,9 @@ export const usePreAuthManager = () => {
       return;
     }
 
-    const userIdentifier = getUserIdentifier(user);
+    const userIdentifier = getUserIdentifier(user, apiVersion);
+    console.log(`Creating key for user ${userName} with identifier ${userIdentifier}`);
+    
     const result = await createPreAuthKey(userIdentifier, expirationDate, reusable);
     
     if (result) {
@@ -161,11 +173,7 @@ export const usePreAuthManager = () => {
       
       // Refresh keys for this user
       try {
-        const keysRes = await getPreAuthKeys(userIdentifier);
-        setPreAuthKeys((prev) => ({ 
-          ...prev, 
-          [userName]: keysRes?.preAuthKeys || [] 
-        }));
+        fetchData()
       } catch (error) {
         console.error("Failed to refresh preauth keys:", error);
       }
@@ -183,7 +191,7 @@ export const usePreAuthManager = () => {
     users,
     preAuthKeys,
     loading,
-    apiVersion, // Expose API version for debugging/display
+    apiVersion,
     fetchData,
     setPreAuthKeys,
     handleExpireKey,
