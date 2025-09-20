@@ -352,10 +352,11 @@ export const API_VERSION_MAP: Record<string, ApiEndpoints> = {
 
     // v0.26 doesn't have routes - this section can be omitted or kept for compatibility
     routes: {
-      get: '/api/v1/routes', // This will likely 404 in v0.26
-      update: (id: string, enabled: boolean) => ({
-        url: enabled ? `/api/v1/routes/${id}/enable` : `/api/v1/routes/${id}/disable`,
+      get: '/api/v1/routes',
+      update: (id: string, routes: string[]) => ({ // enabled: boolean is substituted for the array of routes
+        url: `/api/v1/node/${id}/approve_routes`,
         method: 'POST',
+        body: { routes }
       }),
     },
 
