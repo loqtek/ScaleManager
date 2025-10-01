@@ -3,6 +3,7 @@ import { Alert } from "react-native";
 import Toast from "react-native-toast-message";
 import { getUsers, addUser, deleteUser, renameUser } from "../api/users";
 import { getDevices } from "../api/devices";
+import { getApiEndpoints } from "../utils/apiUtils";
 
 export function useUsers() {
   const [users, setUsers] = useState<any[]>([]);
@@ -11,7 +12,7 @@ export function useUsers() {
 
   const fetchUsers = async () => {
     setLoading(true);
-    
+
     try {
       // Fetch both users and devices for complete data
       const [usersData, devicesData] = await Promise.all([
@@ -59,7 +60,6 @@ export function useUsers() {
       return deviceUserId === searchUserId;
     });
   };
-
   const handleAddUser = () => {
     Alert.prompt(
       "Add User",
@@ -69,7 +69,10 @@ export function useUsers() {
         {
           text: "Add",
           onPress: async (userName: string | undefined) => {
-            if (!userName?.trim()) {
+            const trimmed = userName?.trim();
+
+            // Reject empty input
+            if (!trimmed) {
               Toast.show({
                 type: "error",
                 position: "top",
@@ -79,24 +82,35 @@ export function useUsers() {
               return;
             }
 
+            // Regex: allow only letters, numbers, underscores, and hyphens
+            const validNameRegex = /^[a-zA-Z0-9_-]+$/;
+
+            if (!validNameRegex.test(trimmed)) {
+              Toast.show({
+                type: "error",
+                position: "top",
+                text1: "⚠️ Invalid Characters",
+                text2: "User name cannot contain spaces or special characters (!@#$%).",
+              });
+              return;
+            }
+
             try {
-              const response = await addUser(userName.trim());
+              const response = await addUser(trimmed);
               if (response) {
-                // Refresh the entire users list to get accurate data
-                await fetchUsers();
-                
+                await fetchUsers(); // refresh list
                 Toast.show({
                   type: "success",
                   position: "top",
                   text1: "✅ User Added",
-                  text2: `User "${userName}" added successfully!`,
+                  text2: `User "${trimmed}" added successfully!`,
                 });
               } else {
                 Toast.show({
                   type: "error",
                   position: "top",
                   text1: "⚠️ Add Failed",
-                  text2: `Failed to add user "${userName}".`,
+                  text2: `Failed to add user "${trimmed}".`,
                 });
               }
             } catch (error) {
@@ -114,10 +128,10 @@ export function useUsers() {
     );
   };
 
-  const handleRenameUser = (oldName: string) => {
+  const handleRenameUser = (name: string, id: number) => {
     Alert.prompt(
       "Rename User",
-      `Enter the new name for "${oldName}":`,
+      `Enter the new name for "${name}":`,
       [
         { text: "Cancel", style: "cancel" },
         {
@@ -133,7 +147,7 @@ export function useUsers() {
               return;
             }
 
-            if (newName.trim() === oldName) {
+            if (newName.trim() === name) {
               Toast.show({
                 type: "info",
                 position: "top",
@@ -144,12 +158,29 @@ export function useUsers() {
             }
 
             try {
-              const response = await renameUser(oldName, newName.trim());
+              // Check server version to determine whether to use name or ID
+              const config = await getApiEndpoints();
+              if (!config) {
+                Toast.show({
+                  type: "error",
+                  position: "top",
+                  text1: "⚠️ Configuration Error",
+                  text2: "Failed to get server configuration",
+                });
+                return;
+              }
+
+              const { serverConf } = config;
+              const versionKey = serverConf.version ? `v${serverConf.version.split('.').slice(0, 2).join('.')}` : 'v0.26';
+              const isV026OrHigher = versionKey >= 'v0.26';
+              
+              // Use user ID for v0.26+ or name for older versions
+              const response = await renameUser(isV026OrHigher ? id : name, newName.trim());
               if (response) {
                 // Update local state immediately for better UX
                 setUsers((prev) =>
                   prev.map((user) =>
-                    user.name === oldName ? { ...user, name: newName.trim() } : user
+                    user.id === id ? { ...user, name: newName.trim() } : user
                   )
                 );
 
@@ -157,14 +188,14 @@ export function useUsers() {
                   type: "success",
                   position: "top",
                   text1: "✅ User Renamed",
-                  text2: `"${oldName}" renamed to "${newName}"`,
+                  text2: `"${name}" renamed to "${newName}"`,
                 });
               } else {
                 Toast.show({
                   type: "error",
                   position: "top",
                   text1: "⚠️ Rename Failed",
-                  text2: `Failed to rename user "${oldName}".`,
+                  text2: `Failed to rename user "${name}".`,
                 });
               }
             } catch (error) {
@@ -179,17 +210,34 @@ export function useUsers() {
         },
       ],
       "plain-text",
-      oldName
+      name
     );
   };
 
-  const handleDeleteUser = async (userName: string) => {
+  const handleDeleteUser = async (userName: string, userId: number) => {
     try {
-      const response = await deleteUser(userName);
+      // Check server version to determine whether to use name or ID
+      const config = await getApiEndpoints();
+      if (!config) {
+        Toast.show({
+          type: "error",
+          position: "top",
+          text1: "⚠️ Configuration Error",
+          text2: "Failed to get server configuration",
+        });
+        return;
+      }
+
+      const { serverConf } = config;
+      const versionKey = serverConf.version ? `v${serverConf.version.split('.').slice(0, 2).join('.')}` : 'v0.26';
+      const isV026OrHigher = versionKey >= 'v0.26';
+      
+      // Use user ID for v0.26+ or name for older versions
+      const response = await deleteUser(isV026OrHigher ? userId : userName);
       if (response) {
         // Remove from local state immediately
-        setUsers((prev) => prev.filter((user) => user.name !== userName));
-        
+        setUsers((prev) => prev.filter((user) => user.id !== userId));
+
         // Also refresh to ensure data consistency
         await fetchUsers();
 

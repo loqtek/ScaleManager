@@ -32,27 +32,26 @@ export async function addUser(userName: string) {
   });
 }
 
-export async function deleteUser(userName: string) {
+export async function deleteUser(userNameOrId: string | number) {
   const config = await getApiEndpoints();
   if (!config) return null;
 
-  const { endpoints } = config;
-  
-  // Note: The API expects user ID, but we're receiving userName
-  // This might need adjustment based on your actual implementation
-  const apiCall = endpoints.users.deleteUser(userName as any); // Type assertion for now
+  const { endpoints, serverConf } = config;
+    
+  const apiCall = endpoints.users.deleteUser(userNameOrId);
   
   return await makeApiRequest(apiCall.url, {
     method: apiCall.method,
   });
 }
 
-export async function renameUser(oldName: string, newName: string) {
+export async function renameUser(oldNameOrId: string | number, newName: string) {
   const config = await getApiEndpoints();
   if (!config) return null;
 
-  const { endpoints } = config;
-  const apiCall = endpoints.users.renameUser(oldName, newName);
+  const { endpoints, serverConf } = config;
+    
+  const apiCall = endpoints.users.renameUser(oldNameOrId, newName);
   
   return await makeApiRequest(apiCall.url, {
     method: apiCall.method,

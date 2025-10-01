@@ -8,26 +8,30 @@ export async function getDevices() {
   return await makeApiRequest(endpoints.devices.get, { method: 'GET' });
 }
 
-export async function registerDevice(user: string, key: string) {
+export async function registerDevice(user: string | number, key: string) {
   const config = await getApiEndpoints();
   if (!config) return null;
-
-  const { endpoints } = config;
-  // Convert user string to number if needed
-  const userParam = isNaN(Number(user)) ? user : Number(user);
-  const apiCall = endpoints.devices.registerDevice(userParam as number, key);
+      
+  // Use query parameters for both versions
+  const url = `/api/v1/node/register?user=${user}&key=${key}`;
   
-  return await makeApiRequest(apiCall.url, {
-    method: apiCall.method,
+  return await makeApiRequest(url, {
+    method: 'POST',
   });
 }
 
-export async function renameDevice(id: string, newName: string) {
+export async function renameDevice(idOrName: string | number, newName: string) {
   const config = await getApiEndpoints();
   if (!config) return null;
 
-  const { endpoints } = config;
-  const deviceId = isNaN(Number(id)) ? id : Number(id);
+  const { endpoints, serverConf } = config;
+  
+  // Check if we're using v0.26 or higher (which uses integer IDs)
+  const versionKey = serverConf.version ? `v${serverConf.version.split('.').slice(0, 2).join('.')}` : 'v0.26';
+  const isV026OrHigher = versionKey >= 'v0.26';
+  
+  // Convert to appropriate type based on version
+  const deviceId = isV026OrHigher ? Number(idOrName) : idOrName;
   const apiCall = endpoints.devices.renameDevice(deviceId as number, newName);
   
   return await makeApiRequest(apiCall.url, {
@@ -39,8 +43,14 @@ export async function deleteDevice(id: string) {
   const config = await getApiEndpoints();
   if (!config) return null;
 
-  const { endpoints } = config;
-  const deviceId = isNaN(Number(id)) ? id : Number(id);
+  const { endpoints, serverConf } = config;
+  
+  // Check if we're using v0.26 or higher (which uses integer IDs)
+  const versionKey = serverConf.version ? `v${serverConf.version.split('.').slice(0, 2).join('.')}` : 'v0.26';
+  const isV026OrHigher = versionKey >= 'v0.26';
+  
+  // Convert to appropriate type based on version
+  const deviceId = isV026OrHigher ? Number(idOrName) : idOrName;
   const apiCall = endpoints.devices.deleteDevice(deviceId as number);
   
   return await makeApiRequest(apiCall.url, {
@@ -48,12 +58,18 @@ export async function deleteDevice(id: string) {
   });
 }
 
-export async function addTags(id: string, tags: string[]) {
+export async function addTags(idOrName: string | number, tags: string[]) {
   const config = await getApiEndpoints();
   if (!config) return null;
 
-  const { endpoints } = config;
-  const deviceId = isNaN(Number(id)) ? id : Number(id);
+  const { endpoints, serverConf } = config;
+  
+  // Check if we're using v0.26 or higher (which uses integer IDs)
+  const versionKey = serverConf.version ? `v${serverConf.version.split('.').slice(0, 2).join('.')}` : 'v0.26';
+  const isV026OrHigher = versionKey >= 'v0.26';
+  
+  // Convert to appropriate type based on version
+  const deviceId = isV026OrHigher ? Number(idOrName) : idOrName;
   
   // Format tags with "tag:" prefix and normalize
   const formattedTags = tags.map(tag => `tag:${tag.trim().toLowerCase()}`);
@@ -71,15 +87,23 @@ export async function removeTags(id: string, tags: string[]) {
   return null;
 }
 
-export async function changeUser(id: string, user: string) {
+export async function changeUser(idOrName: string | number, user: string | number) {
   const config = await getApiEndpoints();
   if (!config) return null;
 
-  const { endpoints } = config;
-  const deviceId = isNaN(Number(id)) ? id : Number(id);
-  const apiCall = endpoints.devices.changeUser(deviceId as number, user);
+  const { endpoints, serverConf } = config;
+  
+  // Check if we're using v0.26 or higher (which uses integer IDs)
+  const versionKey = serverConf.version ? `v${serverConf.version.split('.').slice(0, 2).join('.')}` : 'v0.26';
+  const isV026OrHigher = versionKey >= 'v0.26';
+  
+  // Convert to appropriate types based on version
+  const deviceId = isV026OrHigher ? Number(idOrName) : idOrName;
+  const userId = isV026OrHigher ? Number(user) : user;
+  const apiCall = endpoints.devices.changeUser(deviceId as number, userId);
   
   return await makeApiRequest(apiCall.url, {
     method: apiCall.method,
+    body: apiCall.body ? JSON.stringify(apiCall.body) : undefined,
   });
 }

@@ -29,7 +29,7 @@ export default function UsersScreen() {
         {
           text: "Delete User",
           style: "destructive",
-          onPress: () => handleDeleteUser(user.name),
+          onPress: () => handleDeleteUser(user.name, user.id),
         },
       ]
     );
@@ -165,7 +165,7 @@ export default function UsersScreen() {
                   {/* Action Buttons */}
                   <View className="flex-row space-x-3 ">
                     <TouchableOpacity
-                      onPress={() => handleRenameUser(user.name)}
+                      onPress={() => handleRenameUser(user.name, user.id)}
                       className="flex-1 bg-yellow-600 py-2 rounded-lg flex-row items-center justify-center mr-2"
                     >
                       <MaterialIcons name="edit" size={16} color="white" />

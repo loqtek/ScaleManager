@@ -69,7 +69,7 @@ export default function apiKeysScreen() {
       visible={showKeyModal}
       onRequestClose={closeKeyModal}
     >
-      <View className="flex-1 justify-center items-center bg-black/50 px-4">
+      <View className="flex-1 justify-center items-center px-4">
         <View className="bg-zinc-800 rounded-2xl p-6 w-full max-w-md">
           <View className="items-center mb-4">
             <MaterialIcons name="vpn-key" size={48} color="#10b981" />

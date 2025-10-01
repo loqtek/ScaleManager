@@ -7,15 +7,15 @@ export interface ApiEndpoints {
 
   devices: {
     get: string;
-    registerDevice: (user: number, key: string) => { url: string; method: string };
+    registerDevice: (user: number, key: string) => { url: string; method: string; body?: any };
     renameDevice: (id: number, newName: string) => { url: string; method: string };
     deleteDevice: (id: number) => { url: string; method: string };
     addTags: (id: number, tags: string[]) => { url: string; method: string; body?: any };
-    changeUser: (id: number, user: string) => { url: string; method: string };
+    changeUser: (id: number, user: any) => { url: string; method: string; body?: any };
   };
 
   preauthkeys: {
-    get: (userId?: string) => { url: string; method: string };
+    get: (userId?: any) => { url: string; method: string };
     createPreauthKey: (user: number, expiration: string, reusable: boolean) => { 
       url: string; 
       method: string; 
@@ -36,8 +36,8 @@ export interface ApiEndpoints {
   users: {
     get: string;
     addUser: (name: string) => { url: string; method: string; body?: any };
-    deleteUser: (nameOrId: string | number) => { url: string; method: string; body?: any };
-    renameUser: (oldName: string, newName: string) => { url: string; method: string; body?: any };
+    deleteUser: (nameOrId: any) => { url: string; method: string; body?: any };
+    renameUser: (oldNameOrId: any, newName: string) => { url: string; method: string; body?: any };
   };
 }
 
@@ -311,8 +311,9 @@ export const API_VERSION_MAP: Record<string, ApiEndpoints> = {
     devices: {
       get: '/api/v1/node',
       registerDevice: (user: number, key: string) => ({
-        url: `/api/v1/node/register?user=${user}&key=${key}`,
+        url: `/api/v1/node/register`,
         method: 'POST',
+        body: { user, key }
       }),
       renameDevice: (id: number, newName: string) => ({
         url: `/api/v1/node/${id}/rename/${newName}`,
@@ -327,14 +328,15 @@ export const API_VERSION_MAP: Record<string, ApiEndpoints> = {
         method: 'POST',
         body: { tags }
       }),
-      changeUser: (id: number, user: string) => ({
-        url: `/api/v1/node/${id}/user?user=${user}`,
+      changeUser: (id: number, user: number) => ({
+        url: `/api/v1/node/${id}/user`,
         method: 'POST',
+        body: { user }
       }),
     },
 
     preauthkeys: {
-      get: (userId?: string) => ({
+      get: (userId?: number) => ({
         url: userId ? `/api/v1/preauthkey?user=${userId}` : `/api/v1/preauthkey`,
         method: 'GET',
       }),
@@ -361,18 +363,18 @@ export const API_VERSION_MAP: Record<string, ApiEndpoints> = {
     },
 
     users: {
-      get: '/api/v1/user', // Fixed: was incorrectly '/api/v1/routes'
+      get: '/api/v1/user',
       addUser: (name: string) => ({
         url: `/api/v1/user`,
         method: 'POST',
         body: { name }
       }),
-      deleteUser: (nameOrId: string | number) => ({
-        url: `/api/v1/user/${nameOrId}`,
+      deleteUser: (id: number) => ({
+        url: `/api/v1/user/${id}`,
         method: 'DELETE',
       }),
-      renameUser: (oldName: string, newName: string) => ({
-        url: `/api/v1/user/${oldName}/rename/${newName}`,
+      renameUser: (id: number, newName: string) => ({
+        url: `/api/v1/user/${id}/rename/${newName}`,
         method: 'POST',
       }),
     },

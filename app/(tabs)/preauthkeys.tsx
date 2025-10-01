@@ -310,7 +310,7 @@ export default function PreAuthKeysScreen() {
 
       {/* Create Key Modal */}
       <Modal visible={showCreateModal} transparent animationType="slide">
-        <View className="flex-1 justify-center items-center bg-black/50 px-4">
+        <View className="flex-1 justify-center items-center px-4">
           <View className="bg-zinc-800 rounded-xl p-6 w-full max-w-md">
             <Text className="text-white text-xl font-bold mb-4 text-center">Create Pre-Auth Key</Text>
             

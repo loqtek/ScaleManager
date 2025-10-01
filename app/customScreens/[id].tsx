@@ -9,6 +9,7 @@ import { useRouter, useLocalSearchParams } from "expo-router";
 import { renameDevice, deleteDevice, addTags, changeUser } from "../api/devices";
 import { getUsers } from "../api/users";
 import { updateRoute } from "../api/routes";
+import { getApiEndpoints } from "../utils/apiUtils";
 
 interface Device {
   id: string;
@@ -147,7 +148,24 @@ export default function DeviceDetailScreen() {
     if (!device || !tempValue.trim()) return;
     
     try {
-      const result = await renameDevice(device.id, tempValue.trim());
+      // Check server version to determine whether to use ID or name
+      const config = await getApiEndpoints();
+      if (!config) {
+        Toast.show({
+          type: "error",
+          position: "top",
+          text1: "⚠️ Configuration Error",
+          text2: "Failed to get server configuration",
+        });
+        return;
+      }
+
+      const { serverConf } = config;
+      const versionKey = serverConf.version ? `v${serverConf.version.split('.').slice(0, 2).join('.')}` : 'v0.26';
+      const isV026OrHigher = versionKey >= 'v0.26';
+      
+      // Use device ID for v0.26+ or name for older versions
+      const result = await renameDevice(isV026OrHigher ? device.id : device.name, tempValue.trim());
       if (result) {
         setDevice({ ...device, givenName: tempValue.trim() });
         setEditingField(null);
@@ -179,9 +197,24 @@ export default function DeviceDetailScreen() {
     if (!device) return;
     
     try {
-      const result = await changeUser(device.id, newUser);
+      // Check server version to determine whether to use ID or name
+      const config = await getApiEndpoints();
+      if (!config) {
+        Toast.show({
+          type: "error",
+          position: "top",
+          text1: "⚠️ Configuration Error",
+          text2: "Failed to get server configuration",
+        });
+        return;
+      }
+      
+      // Find the user to get their ID if needed
+      const selectedUser = users.find(u => u.name === newUser);
+
+      // Use device ID for v0.26+ or name for older versions
+      const result = await changeUser(device.name, selectedUser);
       if (result) {
-        const selectedUser = users.find(u => u.name === newUser);
         setDevice({ 
           ...device, 
           user: selectedUser || { ...device.user, name: newUser }
@@ -227,7 +260,24 @@ export default function DeviceDetailScreen() {
     }
 
     try {
-      const result = await addTags(device.id, tagsArray);
+      // Check server version to determine whether to use ID or name
+      const config = await getApiEndpoints();
+      if (!config) {
+        Toast.show({
+          type: "error",
+          position: "top",
+          text1: "⚠️ Configuration Error",
+          text2: "Failed to get server configuration",
+        });
+        return;
+      }
+
+      const { serverConf } = config;
+      const versionKey = serverConf.version ? `v${serverConf.version.split('.').slice(0, 2).join('.')}` : 'v0.26';
+      const isV026OrHigher = versionKey >= 'v0.26';
+      
+      // Use device ID for v0.26+ or name for older versions
+      const result = await addTags(isV026OrHigher ? device.id : device.name, tagsArray);
       if (result) {
         setDevice({ 
           ...device, 
@@ -364,6 +414,19 @@ export default function DeviceDetailScreen() {
           style: "destructive",
           onPress: async () => {
             try {
+              // Check server version to determine whether to use ID or name
+              const config = await getApiEndpoints();
+              if (!config) {
+                Toast.show({
+                  type: "error",
+                  position: "top",
+                  text1: "⚠️ Configuration Error",
+                  text2: "Failed to get server configuration",
+                });
+                return;
+              }
+
+              // Use device ID for v0.26+ or name for older versions
               const result = await deleteDevice(device.id);
               if (result) {
                 Toast.show({
@@ -664,7 +727,7 @@ export default function DeviceDetailScreen() {
 
       {/* User Selection Modal */}
       <Modal visible={showUserModal} transparent animationType="slide">
-        <View className="flex-1 justify-center items-center bg-black/50">
+        <View className="flex-1 justify-center items-center bg-black/20">
           <View className="bg-zinc-800 rounded-xl p-4 w-4/5 max-h-96">
             <Text className="text-white text-lg font-semibold mb-4">Select User</Text>
             <ScrollView>
@@ -693,7 +756,7 @@ export default function DeviceDetailScreen() {
 
       {/* Tags Modal */}
       <Modal visible={showTagsModal} transparent animationType="slide">
-        <View className="flex-1 justify-center items-center bg-black/50">
+        <View className="flex-1 justify-center items-center bg-black/20">
           <View className="bg-zinc-800 rounded-xl p-4 w-4/5">
             <Text className="text-white text-lg font-semibold mb-4">Add Tags</Text>
             <TextInput
@@ -727,7 +790,7 @@ export default function DeviceDetailScreen() {
 
       {/* Routes Approval Modal */}
       <Modal visible={showRoutesModal} transparent animationType="slide">
-        <View className="flex-1 justify-center items-center bg-black/50">
+        <View className="flex-1 justify-center items-center bg-black/20">
           <View className="bg-zinc-800 rounded-xl p-4 w-4/5 max-h-120">
             <Text className="text-white text-lg font-semibold mb-4">Approve Routes</Text>
             <Text className="text-slate-400 text-sm mb-4">

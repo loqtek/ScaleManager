@@ -1,8 +1,10 @@
 import { useEffect, useState } from "react";
 import { Alert } from "react-native";
 import { getDevices, registerDevice } from "../api/devices";
+import { getUsers } from "../api/users";
 import Toast from "react-native-toast-message";
 import { useRouter } from "expo-router";
+import { getApiEndpoints } from "../utils/apiUtils";
 
 interface Device {
   id: string;
@@ -26,20 +28,32 @@ interface Device {
 
 export function useDevices() {
   const [devices, setDevices] = useState<Device[]>([]);
+  const [users, setUsers] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [showRegisterModal, setShowRegisterModal] = useState(false);
+  const [selectedUser, setSelectedUser] = useState<any>(null);
+  const [deviceKey, setDeviceKey] = useState("");
   const router = useRouter();
 
   const fetchDevices = async () => {
     setLoading(true);
     try {
-      const data = await getDevices();
-      if (data?.nodes) {
-        setDevices(data.nodes);
-      } else if (Array.isArray(data)) {
-        setDevices(data);
+      const [devicesData, usersData] = await Promise.all([
+        getDevices(),
+        getUsers()
+      ]);
+      
+      if (devicesData?.nodes) {
+        setDevices(devicesData.nodes);
+      } else if (Array.isArray(devicesData)) {
+        setDevices(devicesData);
       } else {
-        console.warn("Unexpected devices data format:", data);
+        console.warn("Unexpected devices data format:", devicesData);
         setDevices([]);
+      }
+
+      if (usersData?.users) {
+        setUsers(usersData.users);
       }
     } catch (error) {
       console.error("Failed to fetch devices:", error);
@@ -59,7 +73,7 @@ export function useDevices() {
   }, []);
 
   // Get appropriate icon based on device name/type
-  const getDeviceTypeIcon = (deviceName: string = ""): string => {
+  const getDeviceTypeIcon = (deviceName: string = ""): any => {
     const name = deviceName.toLowerCase();
     
     if (name.includes('iphone') || name.includes('phone')) return 'phone-iphone';
@@ -126,18 +140,40 @@ export function useDevices() {
     });
   };
 
-  const confirmAndRegister = async (username: string, key: string) => {
+  const confirmAndRegister = async (user: any, key: string) => {
     try {
-      const result = await registerDevice(username, key);
+      // Check server version to determine whether to use ID or name
+      const config = await getApiEndpoints();
+      if (!config) {
+        Toast.show({
+          type: "error",
+          position: "top",
+          text1: "⚠️ Configuration Error",
+          text2: "Failed to get server configuration",
+        });
+        return;
+      }
+
+      const { serverConf } = config;
+      const versionKey = serverConf.version ? `v${serverConf.version.split('.').slice(0, 2).join('.')}` : 'v0.26';
+      const isV026OrHigher = versionKey >= 'v0.26';
+      
+      // Use user ID for v0.26+ or name for older versions
+      const userParam = isV026OrHigher ? user.id : user.name;
+      console.log(userParam, key)
+      const result = await registerDevice(userParam, key);
 
       if (result) {
         Toast.show({
           type: "success",
           position: "top",
           text1: "✅ Device Registered",
-          text2: "Device registered successfully!",
+          text2: `Device registered successfully for ${user.name}!`,
         });
         await fetchDevices(); // Refresh device list
+        setShowRegisterModal(false);
+        setSelectedUser(null);
+        setDeviceKey("");
       } else {
         Toast.show({
           type: "error",
@@ -158,77 +194,57 @@ export function useDevices() {
   };
 
   const handleRegisterDevice = () => {
-    Alert.prompt(
-      "Register Device",
-      "Enter the username to register the device under, or paste the full headscale command:",
-      [
-        { text: "Cancel", style: "cancel" },
-        {
-          text: "Next",
-          onPress: (input) => {
-            if (!input?.trim()) {
-              Toast.show({
-                type: "error",
-                position: "top",
-                text1: "⚠️ Invalid Input",
-                text2: "Please enter a username or command",
-              });
-              return;
-            }
-
-            // Check if it's a full headscale command
-            const fullCommandMatch = input.match(
-              /headscale\s+nodes?\s+register\s+--user\s+([^\s]+)\s+--key\s+([\w:]+)/i
-            );
-
-            if (fullCommandMatch) {
-              const username = fullCommandMatch[1];
-              const preAuthKey = fullCommandMatch[2];
-              
-              Alert.alert(
-                "Confirm Registration",
-                `Register device for user "${username}" with the provided key?`,
-                [
-                  { text: "Cancel", style: "cancel" },
-                  {
-                    text: "Register",
-                    onPress: () => confirmAndRegister(username, preAuthKey),
-                  },
-                ]
-              );
-            } else {
-              // Treat as username, prompt for key
-              const username = input.trim();
-              Alert.prompt(
-                "Enter Pre-Auth Key",
-                `Enter the pre-auth key for user "${username}":`,
-                [
-                  { text: "Cancel", style: "cancel" },
-                  {
-                    text: "Register",
-                    onPress: async (key) => {
-                      if (!key?.trim()) {
-                        Toast.show({
-                          type: "error",
-                          position: "top",
-                          text1: "⚠️ Invalid Key",
-                          text2: "Please enter a valid pre-auth key",
-                        });
-                        return;
-                      }
-                      confirmAndRegister(username, key.trim());
-                    },
-                  },
-                ],
-                "plain-text"
-              );
-            }
-          },
-        },
-      ],
-      "plain-text"
-    );
+    if (users.length === 0) {
+      Toast.show({
+        type: "error",
+        position: "top",
+        text1: "⚠️ No Users",
+        text2: "No users available. Please add a user first.",
+      });
+      return;
+    }
+    setShowRegisterModal(true);
   };
+
+  const handleKeyInput = (input: string) => {
+    // Regex to match "headscale nodes register --user USERNAME --key KEY"
+    const fullCommandMatch = input.match(
+      /headscale\s+nodes?\s+register\s+--user\s+([^\s]+)\s+--key\s+([A-Za-z0-9:_-]+)/i
+    );
+  
+    if (fullCommandMatch) {
+      const username = fullCommandMatch[1];
+      const preAuthKey = fullCommandMatch[2];
+      if (preAuthKey) {
+        setDeviceKey(preAuthKey);
+        confirmAndRegister(selectedUser, preAuthKey);
+      } else {
+        Toast.show({
+          type: "error",
+          position: "top",
+          text1: "⚠️ User Not Found",
+          text2: `User "${selectedUser}" not found in the system`,
+        });
+      }
+    } else {
+      console.log("Treating as key only");
+      // Treat as just a key input
+      const trimmedKey = input.trim();
+      setDeviceKey(trimmedKey);
+  
+      if (selectedUser) {
+        confirmAndRegister(selectedUser, trimmedKey);
+      } else {
+        Toast.show({
+          type: "error",
+          position: "top",
+          text1: "⚠️ No User Selected",
+          text2: "Please select a user before registering with just a key.",
+        });
+      }
+    }
+  };
+  
 
   const handleDevicePress = (device: Device) => {
     router.push({
@@ -271,8 +287,39 @@ export function useDevices() {
     };
   };
 
+  const handleModalClose = () => {
+    setShowRegisterModal(false);
+    setSelectedUser(null);
+    setDeviceKey("");
+  };
+
+  const handleModalRegister = () => {
+    console.log(selectedUser, deviceKey)
+    if (!selectedUser) {
+      Toast.show({
+        type: "error",
+        position: "top",
+        text1: "⚠️ No User Selected",
+        text2: "Please select a user first",
+      });
+      return;
+    }
+    if (!deviceKey.trim()) {
+      Toast.show({
+        type: "error",
+        position: "top",
+        text1: "⚠️ No Key",
+        text2: "Please enter a device key",
+      });
+      return;
+    }
+    console.log(deviceKey)
+    handleKeyInput(deviceKey);
+  };
+
   return {
     devices,
+    users,
     loading,
     fetchDevices,
     handleRegisterDevice,
@@ -284,5 +331,13 @@ export function useDevices() {
     getDevicesByUser,
     getDeviceStats,
     router,
+    // Modal state and handlers
+    showRegisterModal,
+    selectedUser,
+    deviceKey,
+    setSelectedUser,
+    setDeviceKey,
+    handleModalClose,
+    handleModalRegister,
   };
 }

@@ -12,10 +12,12 @@ import {
 } from "react-native";
 import { MaterialIcons } from "@expo/vector-icons";
 import { useDevices } from "@/app/funcs/devices";
+import { RegisterDeviceModal } from "@/app/components/RegisterDeviceModal";
 
 export default function DevicesScreen() {
   const { 
     devices, 
+    users,
     loading, 
     fetchDevices, 
     handleRegisterDevice, 
@@ -24,6 +26,14 @@ export default function DevicesScreen() {
     getLastSeenText,
     getOnlineDevicesCount,
     sortDevices,
+    // Modal state and handlers
+    showRegisterModal,
+    selectedUser,
+    deviceKey,
+    setSelectedUser,
+    setDeviceKey,
+    handleModalClose,
+    handleModalRegister,
   } = useDevices();
 
   const [searchQuery, setSearchQuery] = useState("");
@@ -278,6 +288,18 @@ export default function DevicesScreen() {
           )}
         </ScrollView>
       )}
+      
+      {/* Register Modal */}
+      <RegisterDeviceModal
+        visible={showRegisterModal}
+        onClose={handleModalClose}
+        users={users}
+        selectedUser={selectedUser}
+        onSelectUser={setSelectedUser}
+        deviceKey={deviceKey}
+        onKeyChange={setDeviceKey}
+        onRegister={handleModalRegister}
+      />
     </SafeAreaView>
   );
 }
