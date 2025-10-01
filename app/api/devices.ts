@@ -50,7 +50,7 @@ export async function deleteDevice(id: string) {
   const isV026OrHigher = versionKey >= 'v0.26';
   
   // Convert to appropriate type based on version
-  const deviceId = isV026OrHigher ? Number(idOrName) : idOrName;
+  const deviceId = isV026OrHigher ? Number(id) : id;
   const apiCall = endpoints.devices.deleteDevice(deviceId as number);
   
   return await makeApiRequest(apiCall.url, {

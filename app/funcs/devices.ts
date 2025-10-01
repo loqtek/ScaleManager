@@ -5,26 +5,7 @@ import { getUsers } from "../api/users";
 import Toast from "react-native-toast-message";
 import { useRouter } from "expo-router";
 import { getApiEndpoints } from "../utils/apiUtils";
-
-interface Device {
-  id: string;
-  name: string;
-  givenName?: string;
-  ipAddresses: string[];
-  online: boolean;
-  lastSeen: string;
-  user: {
-    id: string;
-    name: string;
-  };
-  registerMethod?: string;
-  approvedRoutes?: string[];
-  availableRoutes?: string[];
-  subnetRoutes?: string[];
-  validTags?: string[];
-  createdAt: string;
-  expiry?: string | null;
-}
+import { Device } from "../types";
 
 export function useDevices() {
   const [devices, setDevices] = useState<Device[]>([]);

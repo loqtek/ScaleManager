@@ -1,458 +1,50 @@
-import React, { useEffect, useState } from "react";
+import React from "react";
 import { 
-  View, Text, TextInput, TouchableOpacity, SafeAreaView, Alert, 
-  ScrollView, Clipboard, Modal 
+  View, Text, TextInput, TouchableOpacity, SafeAreaView, 
+  ScrollView 
 } from "react-native";
 import { MaterialIcons } from "@expo/vector-icons";
-import Toast from "react-native-toast-message";
 import { useRouter, useLocalSearchParams } from "expo-router";
-import { renameDevice, deleteDevice, addTags, changeUser } from "../api/devices";
-import { getUsers } from "../api/users";
-import { updateRoute } from "../api/routes";
-import { getApiEndpoints } from "../utils/apiUtils";
-
-interface Device {
-  id: string;
-  machineKey: string;
-  nodeKey: string;
-  discoKey: string;
-  ipAddresses: string[];
-  name: string;
-  user: {
-    id: string;
-    name: string;
-    createdAt: string;
-    displayName?: string;
-    email?: string;
-    provider?: string;
-  };
-  lastSeen: string;
-  expiry: string | null;
-  preAuthKey?: {
-    user: any;
-    id: string;
-    key: string;
-    reusable: boolean;
-    ephemeral: boolean;
-    used: boolean;
-    expiration: string;
-    createdAt: string;
-    aclTags: string[];
-  } | null;
-  createdAt: string;
-  registerMethod: string;
-  forcedTags: string[];
-  invalidTags: string[];
-  validTags: string[];
-  givenName: string;
-  online: boolean;
-  approvedRoutes: string[];
-  availableRoutes: string[];
-  subnetRoutes: string[];
-}
+import { Device } from "../types";
+import { useDeviceDetail } from "../funcs/deviceDetail";
+import { formatDate, getTimeAgo, copyToClipboard } from "../utils/deviceUtils";
+import { InfoRow } from "../components/InfoRow";
+import { UserSelectionModal } from "../components/UserSelectionModal";
+import { TagsModal } from "../components/TagsModal";
+import { RoutesModal } from "../components/RoutesModal";
 
 export default function DeviceDetailScreen() {
   const { device: deviceData } = useLocalSearchParams<{ device: string }>();
-  
-  const [device, setDevice] = useState<Device | null>(null);
-  const [users, setUsers] = useState<any[]>([]);
-  const [editingField, setEditingField] = useState<string | null>(null);
-  const [tempValue, setTempValue] = useState<string>("");
-  const [showUserModal, setShowUserModal] = useState(false);
-  const [showTagsModal, setShowTagsModal] = useState(false);
-  const [showRoutesModal, setShowRoutesModal] = useState(false);
-  const [selectedRoutes, setSelectedRoutes] = useState<string[]>([]);
-  const [newTags, setNewTags] = useState("");
-  
   const router = useRouter();
+  
+  const {
+    device,
+    users,
+    editingField,
+    setEditingField,
+    tempValue,
+    setTempValue,
+    showUserModal,
+    setShowUserModal,
+    showTagsModal,
+    setShowTagsModal,
+    showRoutesModal,
+    setShowRoutesModal,
+    selectedRoutes,
+    setSelectedRoutes,
+    newTags,
+    setNewTags,
+    handleRename,
+    handleChangeUser,
+    handleAddTags,
+    handleApproveRoutes,
+    handleRemoveRoute,
+    handleDelete,
+  } = useDeviceDetail(deviceData);
 
-  useEffect(() => {
-    if (deviceData) {
-      try {
-        const parsedDevice: Device = JSON.parse(deviceData);
-        setDevice(parsedDevice);
-        loadUsers();
-      } catch (error) {
-        console.error("Failed to parse device data:", error);
-        Toast.show({
-          type: "error",
-          position: "top",
-          text1: "⚠️ Data Error",
-          text2: "Failed to load device data",
-        });
-      }
-    }
-  }, [deviceData]);
-
-  const loadUsers = async () => {
-    try {
-      const usersData = await getUsers();
-      if (usersData?.users) {
-        setUsers(usersData.users);
-      }
-    } catch (error) {
-      console.error("Failed to load users:", error);
-    }
-  };
-
-  const formatDate = (dateString: string | null) => {
-    if (!dateString || dateString === "0001-01-01T00:00:00Z") {
-      return "Never";
-    }
-    try {
-      return new Date(dateString).toLocaleString();
-    } catch {
-      return "Invalid Date";
-    }
-  };
-
-  const getTimeAgo = (dateString: string) => {
-    try {
-      const date = new Date(dateString);
-      const now = new Date();
-      const diffMs = now.getTime() - date.getTime();
-      const diffMinutes = Math.floor(diffMs / (1000 * 60));
-      const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
-      const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
-
-      if (diffMinutes < 1) return "Just now";
-      if (diffMinutes < 60) return `${diffMinutes}m ago`;
-      if (diffHours < 24) return `${diffHours}h ago`;
-      if (diffDays < 30) return `${diffDays}d ago`;
-      return date.toLocaleDateString();
-    } catch {
-      return "Unknown";
-    }
-  };
-
-  const copyToClipboard = async (text: string, label: string) => {
-    try {
-      await Clipboard.setString(text);
-      Toast.show({
-        type: "success",
-        position: "top",
-        text1: "Copied!",
-        text2: `${label} copied to clipboard`,
-      });
-    } catch (error) {
-      Toast.show({
-        type: "error",
-        position: "top",
-        text1: "Copy Failed",
-        text2: "Could not copy to clipboard",
-      });
-    }
-  };
-
-  const handleRename = async () => {
-    if (!device || !tempValue.trim()) return;
-    
-    try {
-      // Check server version to determine whether to use ID or name
-      const config = await getApiEndpoints();
-      if (!config) {
-        Toast.show({
-          type: "error",
-          position: "top",
-          text1: "⚠️ Configuration Error",
-          text2: "Failed to get server configuration",
-        });
-        return;
-      }
-
-      const { serverConf } = config;
-      const versionKey = serverConf.version ? `v${serverConf.version.split('.').slice(0, 2).join('.')}` : 'v0.26';
-      const isV026OrHigher = versionKey >= 'v0.26';
-      
-      // Use device ID for v0.26+ or name for older versions
-      const result = await renameDevice(isV026OrHigher ? device.id : device.name, tempValue.trim());
-      if (result) {
-        setDevice({ ...device, givenName: tempValue.trim() });
-        setEditingField(null);
-        Toast.show({
-          type: "success",
-          position: "top",
-          text1: "✅ Device Renamed",
-          text2: `Device renamed to "${tempValue.trim()}"`,
-        });
-      } else {
-        Toast.show({
-          type: "error",
-          position: "top",
-          text1: "⚠️ Rename Failed",
-          text2: "Failed to rename device",
-        });
-      }
-    } catch (error) {
-      Toast.show({
-        type: "error",
-        position: "top",
-        text1: "⚠️ Rename Error",
-        text2: "An error occurred while renaming",
-      });
-    }
-  };
-
-  const handleChangeUser = async (newUser: string) => {
-    if (!device) return;
-    
-    try {
-      // Check server version to determine whether to use ID or name
-      const config = await getApiEndpoints();
-      if (!config) {
-        Toast.show({
-          type: "error",
-          position: "top",
-          text1: "⚠️ Configuration Error",
-          text2: "Failed to get server configuration",
-        });
-        return;
-      }
-      
-      // Find the user to get their ID if needed
-      const selectedUser = users.find(u => u.name === newUser);
-
-      // Use device ID for v0.26+ or name for older versions
-      const result = await changeUser(device.name, selectedUser);
-      if (result) {
-        setDevice({ 
-          ...device, 
-          user: selectedUser || { ...device.user, name: newUser }
-        });
-        setShowUserModal(false);
-        Toast.show({
-          type: "success",
-          position: "top",
-          text1: "✅ User Changed",
-          text2: `Device assigned to "${newUser}"`,
-        });
-      } else {
-        Toast.show({
-          type: "error",
-          position: "top",
-          text1: "⚠️ Change Failed",
-          text2: "Failed to change user",
-        });
-      }
-    } catch (error) {
-      Toast.show({
-        type: "error",
-        position: "top",
-        text1: "⚠️ Change Error",
-        text2: "An error occurred while changing user",
-      });
-    }
-  };
-
-  const handleAddTags = async () => {
-    if (!device || !newTags.trim()) return;
-
-    const tagsArray = newTags.split(/[,\s]+/).map(tag => tag.trim().toLowerCase()).filter(tag => tag.length > 0);
-    
-    if (tagsArray.length === 0) {
-      Toast.show({
-        type: "error",
-        position: "top",
-        text1: "⚠️ No Tags",
-        text2: "Please enter at least one tag",
-      });
-      return;
-    }
-
-    try {
-      // Check server version to determine whether to use ID or name
-      const config = await getApiEndpoints();
-      if (!config) {
-        Toast.show({
-          type: "error",
-          position: "top",
-          text1: "⚠️ Configuration Error",
-          text2: "Failed to get server configuration",
-        });
-        return;
-      }
-
-      const { serverConf } = config;
-      const versionKey = serverConf.version ? `v${serverConf.version.split('.').slice(0, 2).join('.')}` : 'v0.26';
-      const isV026OrHigher = versionKey >= 'v0.26';
-      
-      // Use device ID for v0.26+ or name for older versions
-      const result = await addTags(isV026OrHigher ? device.id : device.name, tagsArray);
-      if (result) {
-        setDevice({ 
-          ...device, 
-          validTags: [...new Set([...device.validTags, ...tagsArray])]
-        });
-        setShowTagsModal(false);
-        setNewTags("");
-        Toast.show({
-          type: "success",
-          position: "top",
-          text1: "✅ Tags Added",
-          text2: `Added ${tagsArray.length} tag(s)`,
-        });
-      } else {
-        Toast.show({
-          type: "error",
-          position: "top",
-          text1: "⚠️ Add Failed",
-          text2: "Failed to add tags",
-        });
-      }
-    } catch (error) {
-      Toast.show({
-        type: "error",
-        position: "top",
-        text1: "⚠️ Add Error",
-        text2: "An error occurred while adding tags",
-      });
-    }
-  };
-
-  const handleApproveRoutes = async () => {
-    if (!device || selectedRoutes.length === 0) return;
-
-    try {
-      const newApprovedRoutes = [...new Set([...device.approvedRoutes, ...selectedRoutes])];
-      const result = await updateRoute(device.id, newApprovedRoutes);
-
-      if (result) {
-        setDevice({
-          ...device,
-          approvedRoutes: newApprovedRoutes,
-          availableRoutes: device.availableRoutes.filter(
-            route => !selectedRoutes.includes(route)
-          ),
-        });
-        setSelectedRoutes([]);
-        setShowRoutesModal(false);
-        Toast.show({
-          type: "success",
-          position: "top",
-          text1: "✅ Routes Updated",
-          text2: `Approved ${selectedRoutes.length} route(s)`,
-        });
-      } else {
-        Toast.show({
-          type: "error",
-          position: "top",
-          text1: "⚠️ Update Failed",
-          text2: "Failed to approve routes",
-        });
-      }
-    } catch (error) {
-      Toast.show({
-        type: "error",
-        position: "top",
-        text1: "⚠️ Update Error",
-        text2: "An error occurred while approving routes",
-      });
-    }
-  };
-
-  const handleRemoveRoute = async (route: string) => {
-    if (!device) return;
-
-    Alert.alert(
-      "Remove Route",
-      `Remove route "${route}" from approved routes?`,
-      [
-        { text: "Cancel", style: "cancel" },
-        {
-          text: "Remove",
-          style: "destructive",
-          onPress: async () => {
-            try {
-              const newApprovedRoutes = device.approvedRoutes.filter(r => r !== route);
-              const result = await updateRoute(device.id, newApprovedRoutes);
-
-              if (result) {
-                setDevice({
-                  ...device,
-                  approvedRoutes: newApprovedRoutes,
-                  availableRoutes: [...device.availableRoutes, route],
-                });
-                Toast.show({
-                  type: "success",
-                  position: "top",
-                  text1: "✅ Route Removed",
-                  text2: `Route "${route}" removed from approved`,
-                });
-              } else {
-                Toast.show({
-                  type: "error",
-                  position: "top",
-                  text1: "⚠️ Update Failed",
-                  text2: "Failed to remove route",
-                });
-              }
-            } catch (error) {
-              Toast.show({
-                type: "error",
-                position: "top",
-                text1: "⚠️ Update Error",
-                text2: "An error occurred while removing route",
-              });
-            }
-          },
-        },
-      ]
-    );
-  };
-
-
-  const handleDelete = async () => {
-    if (!device) return;
-    
-    Alert.alert(
-      "Delete Device", 
-      `Are you sure you want to delete "${device.givenName || device.name}"?\n\nThis action cannot be undone.`, 
-      [
-        { text: "Cancel", style: "cancel" },
-        {
-          text: "Delete",
-          style: "destructive",
-          onPress: async () => {
-            try {
-              // Check server version to determine whether to use ID or name
-              const config = await getApiEndpoints();
-              if (!config) {
-                Toast.show({
-                  type: "error",
-                  position: "top",
-                  text1: "⚠️ Configuration Error",
-                  text2: "Failed to get server configuration",
-                });
-                return;
-              }
-
-              // Use device ID for v0.26+ or name for older versions
-              const result = await deleteDevice(device.id);
-              if (result) {
-                Toast.show({
-                  type: "success",
-                  text1: "Device Deleted",
-                  text2: "Device has been removed",
-                });
-                router.push("/(tabs)/devices");
-              } else {
-                Toast.show({
-                  type: "error",
-                  text1: "Delete Failed",
-                  text2: "Failed to delete device",
-                });
-              }
-            } catch (error) {
-              Toast.show({
-                type: "error",
-                text1: "Delete Error",
-                text2: "An error occurred while deleting",
-              });
-            }
-          },
-        },
-      ]
-    );
+  const handleDeleteWithNavigation = async () => {
+    await handleDelete();
+    router.push("/(tabs)/devices");
   };
 
   if (!device) {
@@ -464,35 +56,6 @@ export default function DeviceDetailScreen() {
     );
   }
 
-  const InfoRow = ({ label, value, copyable = false, onEdit }: {
-    label: string;
-    value: string;
-    copyable?: boolean;
-    onEdit?: () => void;
-  }) => (
-    <View className="mb-4">
-      <View className="flex-row justify-between items-center mb-1">
-        <Text className="text-slate-400 text-sm font-medium">{label}:</Text>
-        <View className="flex-row space-x-2">
-          {copyable && (
-            <TouchableOpacity onPress={() => copyToClipboard(value, label)}>
-              <MaterialIcons name="content-copy" size={16} color="#60a5fa" />
-            </TouchableOpacity>
-          )}
-          {onEdit && (
-            <TouchableOpacity onPress={onEdit}>
-              <MaterialIcons name="edit" size={16} color="#60a5fa" />
-            </TouchableOpacity>
-          )}
-        </View>
-      </View>
-      <View className="bg-zinc-700 p-3 rounded-lg">
-        <Text className="text-white font-mono text-sm" selectable>
-          {value || "N/A"}
-        </Text>
-      </View>
-    </View>
-  );
 
   return (
     <SafeAreaView className="flex-1 bg-zinc-900">
@@ -717,7 +280,7 @@ export default function DeviceDetailScreen() {
           <Text className="text-white text-lg font-semibold mb-4">Actions</Text>
           <TouchableOpacity 
             className="bg-red-600 py-3 rounded-lg flex-row items-center justify-center"
-            onPress={handleDelete}
+            onPress={handleDeleteWithNavigation}
           >
             <MaterialIcons name="delete" size={20} color="white" />
             <Text className="text-white font-semibold ml-2">Delete Device</Text>
@@ -725,141 +288,36 @@ export default function DeviceDetailScreen() {
         </View>
       </ScrollView>
 
-      {/* User Selection Modal */}
-      <Modal visible={showUserModal} transparent animationType="slide">
-        <View className="flex-1 justify-center items-center bg-black/20">
-          <View className="bg-zinc-800 rounded-xl p-4 w-4/5 max-h-96">
-            <Text className="text-white text-lg font-semibold mb-4">Select User</Text>
-            <ScrollView>
-              {users.map((user) => (
-                <TouchableOpacity
-                  key={user.id}
-                  onPress={() => handleChangeUser(user.name)}
-                  className="py-3 border-b border-zinc-700"
-                >
-                  <Text className="text-white">{user.name}</Text>
-                  {user.displayName && (
-                    <Text className="text-slate-400 text-sm">{user.displayName}</Text>
-                  )}
-                </TouchableOpacity>
-              ))}
-            </ScrollView>
-            <TouchableOpacity
-              onPress={() => setShowUserModal(false)}
-              className="bg-gray-600 py-2 rounded mt-4"
-            >
-              <Text className="text-white text-center">Cancel</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-      </Modal>
+      {/* Modals */}
+      <UserSelectionModal
+        visible={showUserModal}
+        onClose={() => setShowUserModal(false)}
+        users={users}
+        onSelectUser={handleChangeUser}
+      />
 
-      {/* Tags Modal */}
-      <Modal visible={showTagsModal} transparent animationType="slide">
-        <View className="flex-1 justify-center items-center bg-black/20">
-          <View className="bg-zinc-800 rounded-xl p-4 w-4/5">
-            <Text className="text-white text-lg font-semibold mb-4">Add Tags</Text>
-            <TextInput
-              className="bg-zinc-700 text-white p-3 rounded-lg mb-4"
-              value={newTags}
-              onChangeText={setNewTags}
-              placeholder="Enter tags separated by commas or spaces"
-              placeholderTextColor="#94a3b8"
-              multiline
-            />
-            <View className="flex-row space-x-2">
-              <TouchableOpacity
-                onPress={handleAddTags}
-                className="flex-1 bg-yellow-600 py-3 rounded-lg"
-              >
-                <Text className="text-white font-semibold text-center">Add Tags</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                onPress={() => {
-                  setShowTagsModal(false);
-                  setNewTags("");
-                }}
-                className="flex-1 bg-gray-600 py-3 rounded-lg"
-              >
-                <Text className="text-white text-center">Cancel</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        </View>
-      </Modal>
+      <TagsModal
+        visible={showTagsModal}
+        onClose={() => {
+          setShowTagsModal(false);
+          setNewTags("");
+        }}
+        newTags={newTags}
+        setNewTags={setNewTags}
+        onAddTags={handleAddTags}
+      />
 
-      {/* Routes Approval Modal */}
-      <Modal visible={showRoutesModal} transparent animationType="slide">
-        <View className="flex-1 justify-center items-center bg-black/20">
-          <View className="bg-zinc-800 rounded-xl p-4 w-4/5 max-h-120">
-            <Text className="text-white text-lg font-semibold mb-4">Approve Routes</Text>
-            <Text className="text-slate-400 text-sm mb-4">
-              Select routes to approve from available routes:
-            </Text>
-            
-            <ScrollView className="mb-4">
-              {device?.availableRoutes?.map((route, index) => (
-                <TouchableOpacity
-                  key={index}
-                  onPress={() => {
-                    if (selectedRoutes.includes(route)) {
-                      setSelectedRoutes(selectedRoutes.filter(r => r !== route));
-                    } else {
-                      setSelectedRoutes([...selectedRoutes, route]);
-                    }
-                  }}
-                  className={`flex-row items-center justify-between py-3 px-3 mb-2 rounded-lg ${
-                    selectedRoutes.includes(route) ? 'bg-green-600/20 border border-green-500' : 'bg-zinc-700'
-                  }`}
-                >
-                  <Text className={`font-mono text-sm flex-1 ${
-                    selectedRoutes.includes(route) ? 'text-green-400' : 'text-white'
-                  }`}>
-                    {route}
-                  </Text>
-                  <MaterialIcons 
-                    name={selectedRoutes.includes(route) ? "check-box" : "check-box-outline-blank"} 
-                    size={20} 
-                    color={selectedRoutes.includes(route) ? "#10b981" : "#6b7280"} 
-                  />
-                </TouchableOpacity>
-              ))}
-            </ScrollView>
-
-            {selectedRoutes.length > 0 && (
-              <View className="bg-zinc-700 p-3 rounded-lg mb-4">
-                <Text className="text-slate-400 text-sm mb-1">Selected routes ({selectedRoutes.length}):</Text>
-                <Text className="text-green-400 text-sm font-mono">
-                  {selectedRoutes.join(", ")}
-                </Text>
-              </View>
-            )}
-            
-            <View className="flex-row space-x-2">
-              <TouchableOpacity
-                onPress={handleApproveRoutes}
-                disabled={selectedRoutes.length === 0}
-                className={`flex-1 py-3 rounded-lg mx-2 ${
-                  selectedRoutes.length > 0 ? 'bg-green-600' : 'bg-gray-600'
-                }`}
-              >
-                <Text className="text-white font-semibold text-center">
-                  Approve {selectedRoutes.length > 0 ? `(${selectedRoutes.length})` : ''}
-                </Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                onPress={() => {
-                  setShowRoutesModal(false);
-                  setSelectedRoutes([]);
-                }}
-                className="flex-1 bg-gray-600 py-3 rounded-lg mx-2"
-              >
-                <Text className="text-white text-center">Cancel</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        </View>
-      </Modal>
+      <RoutesModal
+        visible={showRoutesModal}
+        onClose={() => {
+          setShowRoutesModal(false);
+          setSelectedRoutes([]);
+        }}
+        availableRoutes={device?.availableRoutes || []}
+        selectedRoutes={selectedRoutes}
+        setSelectedRoutes={setSelectedRoutes}
+        onApproveRoutes={handleApproveRoutes}
+      />
     </SafeAreaView>
   );
 }
