@@ -108,7 +108,7 @@ export function useDeviceDetail(deviceData: string | undefined) {
       }
       
       const selectedUser = users.find(u => u.name === newUser);
-      const result = await changeUser(device.name, selectedUser);
+      const result = await changeUser(device.id, selectedUser);
       
       if (result) {
         setDevice({ 

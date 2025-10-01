@@ -87,7 +87,7 @@ export async function removeTags(id: string, tags: string[]) {
   return null;
 }
 
-export async function changeUser(idOrName: string | number, user: string | number) {
+export async function changeUser(idOrName: number, user: string | number) {
   const config = await getApiEndpoints();
   if (!config) return null;
 
@@ -99,7 +99,7 @@ export async function changeUser(idOrName: string | number, user: string | numbe
   
   // Convert to appropriate types based on version
   const deviceId = isV026OrHigher ? Number(idOrName) : idOrName;
-  const userId = isV026OrHigher ? Number(user) : user;
+  const userId = isV026OrHigher ? Number(user.id) : user.name;
   const apiCall = endpoints.devices.changeUser(deviceId as number, userId);
   
   return await makeApiRequest(apiCall.url, {
