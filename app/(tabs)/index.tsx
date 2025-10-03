@@ -23,7 +23,7 @@ export default function IndexScreen() {
     onlineDevices,
     offlineDevices,
     topActiveDevices,
-    pingTime, 
+    pingTime,
     loading,
     measurePing,
     handleSignOut
@@ -37,11 +37,29 @@ export default function IndexScreen() {
   const handleAccounts = () => {
     router.push("/accounts");
   };
+  const handleDiscord = async () => {
+    const url = "https://discord.gg/UARvXnT2";
+    const supported = await Linking.canOpenURL(url);
 
+    if (supported) {
+      await Linking.openURL(url);
+    } else {
+      Alert.alert(
+        "Cannot Open Link",
+        "Unable to open Discord. Please visit: https://discord.gg/UARvXnT2",
+        [{ text: "OK" }]
+      );
+    }
+  };
+
+  useEffect(() => {
+    measurePing();
+    fetchData();
+  }, []);
   const handleGitHub = async () => {
     const url = "https://github.com/loqtek/ScaleManager/issues";
     const supported = await Linking.canOpenURL(url);
-    
+
     if (supported) {
       await Linking.openURL(url);
     } else {
@@ -56,7 +74,7 @@ export default function IndexScreen() {
   const handleStarRepo = async () => {
     const url = "https://github.com/loqtek/ScaleManager";
     const supported = await Linking.canOpenURL(url);
-    
+
     if (supported) {
       await Linking.openURL(url);
     } else {
@@ -86,7 +104,7 @@ export default function IndexScreen() {
             <Text className="text-white text-2xl font-bold">Scale Manager</Text>
             <Text className="text-slate-400">Headscale Network Dashboard</Text>
           </View>
-          
+
           <View className="flex-row space-x-3">
             <TouchableOpacity onPress={handleAccounts} className="p-2">
               <Ionicons name="person-circle" size={24} color="white" />
@@ -110,7 +128,7 @@ export default function IndexScreen() {
                 </Text>
               )}
             </View>
-            <TouchableOpacity 
+            <TouchableOpacity
               onPress={measurePing}
               className="bg-zinc-700 p-3 rounded-lg"
             >
@@ -123,14 +141,14 @@ export default function IndexScreen() {
         <View className="bg-zinc-800 rounded-xl p-4 mb-6 border border-zinc-700">
           <View className="flex-row items-center justify-between mb-4">
             <Text className="text-white text-lg font-semibold">Network Overview</Text>
-            <TouchableOpacity 
+            <TouchableOpacity
               onPress={fetchData}
               className="bg-zinc-700 p-2 rounded-lg"
             >
               <MaterialIcons name="refresh" size={16} color="white" />
             </TouchableOpacity>
           </View>
-          
+
           <View className="flex-row flex-wrap justify-between">
             <View className="w-[48%] bg-zinc-700 p-3 rounded-lg mb-2">
               <View className="flex-row items-center">
@@ -139,7 +157,7 @@ export default function IndexScreen() {
               </View>
               <Text className="text-white text-xl font-bold mt-1">{usersCount}</Text>
             </View>
-            
+
             <View className="w-[48%] bg-zinc-700 p-3 rounded-lg mb-2">
               <View className="flex-row items-center">
                 <MaterialIcons name="wifi" size={16} color="#10b981" />
@@ -147,7 +165,7 @@ export default function IndexScreen() {
               </View>
               <Text className="text-white text-xl font-bold mt-1">{onlineDevices.length}</Text>
             </View>
-            
+
             <View className="w-[48%] bg-zinc-700 p-3 rounded-lg">
               <View className="flex-row items-center">
                 <MaterialIcons name="wifi-off" size={16} color="#f87171" />
@@ -155,7 +173,7 @@ export default function IndexScreen() {
               </View>
               <Text className="text-white text-xl font-bold mt-1">{offlineDevices.length}</Text>
             </View>
-            
+
             <View className="w-[48%] bg-zinc-700 p-3 rounded-lg">
               <View className="flex-row items-center">
                 <Ionicons name="server" size={16} color="#60a5fa" />
@@ -219,12 +237,12 @@ export default function IndexScreen() {
                 Help Improve Scale Manager
               </Text>
             </View>
-            
+
             <Text className="text-slate-300 text-center mb-6 leading-6">
-              Found a bug or have a feature idea? We'd love to hear from you! 
+              Found a bug or have a feature idea? We'd love to hear from you!
               Your feedback helps make this app better for everyone.
             </Text>
-            
+
             <View className="space-y-3">
               <TouchableOpacity
                 onPress={handleGitHub}
@@ -236,10 +254,10 @@ export default function IndexScreen() {
                   Report Issues & Suggestions
                 </Text>
               </TouchableOpacity>
-              
+
               <TouchableOpacity
                 onPress={handleStarRepo}
-                className="bg-zinc-700 py-3 px-4 rounded-lg flex-row items-center justify-center border border-zinc-600"
+                className="bg-zinc-700 py-3 px-4 rounded-lg flex-row items-center justify-center border border-zinc-600 mb-4"
                 activeOpacity={0.8}
               >
                 <FontAwesome name="star" size={16} color="#fbbf24" />
@@ -247,10 +265,24 @@ export default function IndexScreen() {
                   Star on GitHub
                 </Text>
               </TouchableOpacity>
+              <TouchableOpacity
+                onPress={handleDiscord}
+                className="bg-zinc-700 py-3 px-4 rounded-lg flex-row items-center justify-center border border-zinc-600"
+                activeOpacity={0.8}
+              >
+                <FontAwesome name="inbox" size={16} color="#7289DA" />
+                <Text className="text-slate-200 font-semibold ml-2">
+                  Join Our Discord
+                </Text>
+              </TouchableOpacity>
+
             </View>
-            
+
             <Text className="text-slate-400 text-xs text-center mt-4">
               github.com/loqtek/ScaleManager
+            </Text>
+            <Text className="text-slate-400 text-xs text-center mt-1">
+              discord.gg/UARvXnT2
             </Text>
           </View>
         </View>
