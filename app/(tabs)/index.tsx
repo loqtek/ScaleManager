@@ -38,7 +38,7 @@ export default function IndexScreen() {
     router.push("/accounts");
   };
   const handleDiscord = async () => {
-    const url = "https://discord.gg/UARvXnT2";
+    const url = "https://discord.gg/fRMxHmwm4z";
     const supported = await Linking.canOpenURL(url);
 
     if (supported) {
@@ -46,7 +46,7 @@ export default function IndexScreen() {
     } else {
       Alert.alert(
         "Cannot Open Link",
-        "Unable to open Discord. Please visit: https://discord.gg/UARvXnT2",
+        "Unable to open Discord. Please visit: https://discord.gg/fRMxHmwm4z",
         [{ text: "OK" }]
       );
     }
@@ -282,7 +282,7 @@ export default function IndexScreen() {
               github.com/loqtek/ScaleManager
             </Text>
             <Text className="text-slate-400 text-xs text-center mt-1">
-              discord.gg/UARvXnT2
+              discord.gg/fRMxHmwm4z
             </Text>
           </View>
         </View>
