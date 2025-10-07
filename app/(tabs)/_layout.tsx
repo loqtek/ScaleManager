@@ -98,6 +98,21 @@ export default function TabLayout() {
           ),
         }}
       />
+
+      <Tabs.Screen
+        name="acl"
+        options={{
+          title: "ACL",
+          headerShown: false,
+          tabBarIcon: ({ color }) => (
+            <MaterialCommunityIcons
+              name="shield-account"
+              color={color}
+              size={26}
+            />
+          ),
+        }}
+      />
     </Tabs>
   );
 }

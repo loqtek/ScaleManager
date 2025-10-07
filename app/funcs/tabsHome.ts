@@ -5,9 +5,10 @@ import { getServerConfig } from "../utils/getServer";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Alert } from "react-native";
 import { useRouter } from "expo-router";
+import { Device } from "../types";
 
 export function useDashboardData() {
-    const [devices, setDevices] = useState([]);
+    const [devices, setDevices] = useState<Device[]>([]);
     const [usersCount, setUsersCount] = useState(0);
     const [pingTime, setPingTime] = useState<number | null>(null);
     const [loading, setLoading] = useState(false);
@@ -28,7 +29,7 @@ export function useDashboardData() {
 
     const onlineDevices = devices.filter((d) => d.online);
     const offlineDevices = devices.filter((d) => !d.online);
-    const topActiveDevices = [...devices]
+    const topActiveDevices: Device[] = [...devices]
         .sort((a, b) => new Date(b.lastSeen).getTime() - new Date(a.lastSeen).getTime())
         .slice(0, 5);
 
