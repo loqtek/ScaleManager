@@ -46,8 +46,21 @@ export async function makeApiRequest(url: string, options: RequestInit = {}) {
     });
 
     if (!response.ok) {
-      console.error("API Error:", response.status, await response.text());
-      return null;
+      const errorText = await response.text();
+      console.error("API Error:", response.status, errorText);
+      
+      // Try to parse error response as JSON
+      try {
+        const errorData = JSON.parse(errorText);
+        return errorData; // Return the error data instead of null
+      } catch (parseError) {
+        // If parsing fails, return a generic error object
+        return {
+          code: response.status,
+          message: errorText,
+          error: true
+        };
+      }
     }
 
     const data = await response.json();

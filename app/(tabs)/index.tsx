@@ -209,14 +209,15 @@ export default function IndexScreen() {
           <Text className="text-white text-lg font-semibold mb-3">Quick Actions</Text>
           <View className="flex-row flex-wrap justify-between">
             {[
-              { label: "Users", route: "/(tabs)/users", icon: "people" },
-              { label: "Devices", route: "/(tabs)/devices", icon: "devices" },
-              { label: "Auth Keys", route: "/(tabs)/preauthkeys", icon: "vpn-key" },
-              { label: "API Keys", route: "/(tabs)/apikeys", icon: "key" },
+              { label: "Users", route: "/(tabs)/users" as const, icon: "people" as const },
+              { label: "Devices", route: "/(tabs)/devices" as const, icon: "devices" as const },
+              { label: "Auth Keys", route: "/(tabs)/preauthkeys" as const, icon: "vpn-key" as const },
+              { label: "API Keys", route: "/(tabs)/apikeys" as const, icon: "key" as const },
+              { label: "ACL", route: "/(tabs)/acl" as const, icon: "security" as const },
             ].map((item) => (
               <TouchableOpacity
                 key={item.route}
-                onPress={() => router.replace(item.route)}
+                onPress={() => router.push(item.route as any)}
                 className="bg-zinc-800 w-[48%] p-4 rounded-xl mb-3 border border-zinc-700 flex-row items-center"
               >
                 <MaterialIcons name={item.icon} size={20} color="#60a5fa" />

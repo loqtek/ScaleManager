@@ -39,6 +39,11 @@ export interface ApiEndpoints {
     deleteUser: (nameOrId: any) => { url: string; method: string; body?: any };
     renameUser: (oldNameOrId: any, newName: string) => { url: string; method: string; body?: any };
   };
+
+  acl: {
+    getPolicy: string;
+    updatePolicy: (policy: any) => { url: string; method: string; body: any };
+  };
 }
 
 export const API_VERSION_MAP: Record<string, ApiEndpoints> = {
@@ -121,6 +126,15 @@ export const API_VERSION_MAP: Record<string, ApiEndpoints> = {
       renameUser: (oldName: string, newName: string) => ({
         url: `/api/v1/user/${oldName}/rename/${newName}`,
         method: 'POST',
+      }),
+    },
+
+    acl: {
+      getPolicy: '/api/v1/policy',
+      updatePolicy: (policy: any) => ({
+        url: '/api/v1/policy',
+        method: 'PUT',
+        body: JSON.stringify(policy)
       }),
     },
   },
@@ -207,6 +221,15 @@ export const API_VERSION_MAP: Record<string, ApiEndpoints> = {
         method: 'POST',
       }),
     },
+
+    acl: {
+      getPolicy: '/api/v1/policy',
+      updatePolicy: (policy: any) => ({
+        url: '/api/v1/policy',
+        method: 'PUT',
+        body: JSON.stringify(policy)
+      }),
+    },
   },
 
   'v0.25': {
@@ -289,6 +312,15 @@ export const API_VERSION_MAP: Record<string, ApiEndpoints> = {
       renameUser: (oldName: string, newName: string) => ({
         url: `/api/v1/user/${oldName}/rename/${newName}`,
         method: 'POST',
+      }),
+    },
+
+    acl: {
+      getPolicy: '/api/v1/policy',
+      updatePolicy: (policy: any) => ({
+        url: '/api/v1/policy',
+        method: 'PUT',
+        body: JSON.stringify(policy)
       }),
     },
   },
@@ -376,6 +408,15 @@ export const API_VERSION_MAP: Record<string, ApiEndpoints> = {
       renameUser: (id: number, newName: string) => ({
         url: `/api/v1/user/${id}/rename/${newName}`,
         method: 'POST',
+      }),
+    },
+
+    acl: {
+      getPolicy: '/api/v1/policy',
+      updatePolicy: (policy: any) => ({
+        url: '/api/v1/policy',
+        method: 'PUT',
+        body: JSON.stringify(policy)
       }),
     },
   },
