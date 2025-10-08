@@ -134,7 +134,7 @@ export const API_VERSION_MAP: Record<string, ApiEndpoints> = {
       updatePolicy: (policy: any) => ({
         url: '/api/v1/policy',
         method: 'PUT',
-        body: policy
+        body: JSON.stringify(policy)
       }),
     },
   },
@@ -227,7 +227,7 @@ export const API_VERSION_MAP: Record<string, ApiEndpoints> = {
       updatePolicy: (policy: any) => ({
         url: '/api/v1/policy',
         method: 'PUT',
-        body: policy
+        body: JSON.stringify(policy)
       }),
     },
   },
@@ -320,7 +320,7 @@ export const API_VERSION_MAP: Record<string, ApiEndpoints> = {
       updatePolicy: (policy: any) => ({
         url: '/api/v1/policy',
         method: 'PUT',
-        body: policy
+        body: JSON.stringify(policy)
       }),
     },
   },
@@ -416,7 +416,7 @@ export const API_VERSION_MAP: Record<string, ApiEndpoints> = {
       updatePolicy: (policy: any) => ({
         url: '/api/v1/policy',
         method: 'PUT',
-        body: policy
+        body: JSON.stringify(policy)
       }),
     },
   },

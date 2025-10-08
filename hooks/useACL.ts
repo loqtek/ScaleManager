@@ -121,6 +121,7 @@ export const useACL = (): ACLHookReturn => {
       try {
         parsedPolicy = JSON.parse(editText);
       } catch (e) {
+        console.error("Invalid JSON:", e);
         Alert.alert("Invalid JSON", "Please check your JSON syntax before saving.");
         return;
       }
@@ -136,11 +137,30 @@ export const useACL = (): ACLHookReturn => {
       }
 
       // Update the policy
-      console.log("Parsed policy:", parsedPolicy);
       const response = await updateACLPolicy(parsedPolicy);
-      console.log("Update response:", response);
       
-      if (response) {
+      // Check if response shows an error
+      if (response && response.code) {
+        let errorMessage = '';
+        
+        // Check if it's a server error response
+        if (response.code !== undefined && response.message) {
+          errorMessage = `Server Error (Code ${response.code}): ${response.message}`;
+        } else if (response.error) {
+          errorMessage = `Server Error: ${response.error}`;
+        } else if (response.message) {
+          errorMessage = `Error: ${response.message}`;
+        }
+        
+        if (errorMessage) {
+          Alert.alert("Policy Update Failed", errorMessage);
+          setEditing(false);
+          return;
+        }
+      }
+      
+      // Check if response is successful
+      if (response && !response.error && !response.code) {
         setPolicy(editText);
         setOriginalPolicy(editText);
         setEditing(false);
@@ -151,7 +171,6 @@ export const useACL = (): ACLHookReturn => {
     } catch (error: any) {
       console.error("Error saving policy:", error);
       
-      // Check for specific errors
       const errorMessage = error?.message || error?.toString() || '';
       
       if (errorMessage.includes('update is disabled for modes other than \'database\'') ||

@@ -23,16 +23,28 @@ export async function updateACLPolicy(policy: any) {
     const config = await getApiEndpoints();
     if (!config) return null;
 
-    const { endpoints } = config;
+    const { endpoints, serverConf } = config;
+    
+    const policyString = typeof policy === 'string' ? policy : JSON.stringify(policy);
+    
+    const requestBody = JSON.stringify({
+      policy: policyString
+    });
+        
     const updateConfig = endpoints.acl.updatePolicy(policy);
+    
     const response = await makeApiRequest(updateConfig.url, {
-      method: updateConfig.method,
-      body: JSON.stringify(updateConfig.body),
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${serverConf.apiKey}`,
+      },
+      body: requestBody,
     });
 
     return response;
   } catch (error) {
     console.error("Update ACL policy error:", error);
-    return null;
+    throw error;
   }
 }
