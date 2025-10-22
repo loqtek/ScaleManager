@@ -1,11 +1,10 @@
 import React, { useRef } from "react";
 import { 
   View, Text, TextInput, TouchableOpacity, SafeAreaView, 
-  ScrollView, Animated
+ Animated
 } from "react-native";
 import { MaterialIcons } from "@expo/vector-icons";
 import { useRouter, useLocalSearchParams } from "expo-router";
-import { Device } from "../types";
 import { useDeviceDetail } from "../funcs/deviceDetail";
 import { formatDate, getTimeAgo, copyToClipboard } from "../utils/deviceUtils";
 import { InfoRow } from "../components/InfoRow";

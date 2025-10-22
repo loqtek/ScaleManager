@@ -53,7 +53,8 @@ export async function makeApiRequest(url: string, options: RequestInit = {}) {
       try {
         const errorData = JSON.parse(errorText);
         return errorData; // Return the error data instead of null
-      } catch (parseError) {
+      } catch (error) {
+        console.error(error)
         // If parsing fails, return a generic error object
         return {
           code: response.status,

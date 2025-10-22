@@ -1,10 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import {
   Modal,
   View,
   Text,
   TouchableOpacity,
-  SafeAreaView,
   ScrollView,
   Animated,
   Dimensions,
@@ -20,11 +19,11 @@ const { width } = Dimensions.get('window');
 
 export default function SetupGuideModal({ visible, onClose }: SetupGuideModalProps) {
   const [currentStep, setCurrentStep] = useState(0);
-  const [fadeAnim] = useState(new Animated.Value(0));
-  const [slideAnim] = useState(new Animated.Value(50));
-  const [progressAnim] = useState(new Animated.Value(0));
+  const fadeAnim = useMemo(() => new Animated.Value(0), []);
+  const slideAnim = useMemo(() => new Animated.Value(50), []);
+  const progressAnim = useMemo(() => new Animated.Value(0), []);
 
-  const steps = [
+  const steps = useMemo(() => [
     {
       id: 'welcome',
       title: 'Welcome to ACL Setup',
@@ -414,7 +413,7 @@ export default function SetupGuideModal({ visible, onClose }: SetupGuideModalPro
         </View>
       ),
     },
-  ];
+  ], [width]);
 
   useEffect(() => {
     if (visible) {
@@ -444,7 +443,7 @@ export default function SetupGuideModal({ visible, onClose }: SetupGuideModalPro
       slideAnim.setValue(50);
       progressAnim.setValue(0);
     }
-  }, [visible]);
+  }, [visible, fadeAnim, slideAnim, progressAnim]);
 
   useEffect(() => {
     Animated.spring(progressAnim, {
@@ -453,7 +452,7 @@ export default function SetupGuideModal({ visible, onClose }: SetupGuideModalPro
       friction: 7,
       useNativeDriver: false,
     }).start();
-  }, [currentStep]);
+  }, [currentStep, progressAnim, steps.length]);
 
   const nextStep = () => {
     if (currentStep < steps.length - 1) {
@@ -483,9 +482,10 @@ export default function SetupGuideModal({ visible, onClose }: SetupGuideModalPro
           style={{
             opacity: fadeAnim,
             transform: [{ translateY: slideAnim }],
+            maxHeight: '75%',
+            minHeight: '80%',
           }}
           className="bg-zinc-900 rounded-3xl w-full max-w-2xl border-2 border-zinc-700 shadow-2xl overflow-hidden"
-          style={{ maxHeight: '75%', minHeight: '80%' }}
         >
             {/* Header with gradient background */}
             <View 

@@ -8,7 +8,6 @@ import {
   ActivityIndicator,
   RefreshControl,
   TextInput,
-  Modal,
 } from "react-native";
 import { MaterialIcons } from "@expo/vector-icons";
 import { useDevices } from "@/app/funcs/devices";
@@ -60,18 +59,6 @@ export default function DevicesScreen() {
     fetchDevices();
   };
 
-  const formatDate = (dateString: string) => {
-    try {
-      return new Date(dateString).toLocaleDateString('en-US', {
-        month: 'short',
-        day: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit'
-      });
-    } catch {
-      return "Unknown";
-    }
-  };
 
   return (
     <SafeAreaView className="flex-1 bg-zinc-900">

@@ -1,5 +1,4 @@
 import { useEffect, useState } from "react";
-import { Alert } from "react-native";
 import { getDevices, registerDevice } from "../api/devices";
 import { getUsers } from "../api/users";
 import Toast from "react-native-toast-message";
@@ -194,7 +193,7 @@ export function useDevices() {
     );
   
     if (fullCommandMatch) {
-      const username = fullCommandMatch[1];
+      //const username = fullCommandMatch[1];
       const preAuthKey = fullCommandMatch[2];
       if (preAuthKey) {
         setDeviceKey(preAuthKey);

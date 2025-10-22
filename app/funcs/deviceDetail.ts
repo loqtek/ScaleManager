@@ -89,6 +89,7 @@ export function useDeviceDetail(deviceData: string | undefined) {
         text1: "⚠️ Rename Error",
         text2: "An error occurred while renaming",
       });
+      console.error(error)
     }
   };
 
@@ -137,6 +138,7 @@ export function useDeviceDetail(deviceData: string | undefined) {
         text1: "⚠️ Change Error",
         text2: "An error occurred while changing user",
       });
+      console.error(error)
     }
   };
 
@@ -198,6 +200,7 @@ export function useDeviceDetail(deviceData: string | undefined) {
         text1: "⚠️ Add Error",
         text2: "An error occurred while adding tags",
       });
+      console.error(error)
     }
   };
 
@@ -239,6 +242,7 @@ export function useDeviceDetail(deviceData: string | undefined) {
         text1: "⚠️ Update Error",
         text2: "An error occurred while approving routes",
       });
+      console.error(error)
     }
   };
 
@@ -285,6 +289,7 @@ export function useDeviceDetail(deviceData: string | undefined) {
                 text1: "⚠️ Update Error",
                 text2: "An error occurred while removing route",
               });
+              console.error(error)
             }
           },
         },
@@ -337,6 +342,7 @@ export function useDeviceDetail(deviceData: string | undefined) {
                 text1: "Delete Error",
                 text2: "An error occurred while deleting",
               });
+              console.error(error)
             }
           },
         },

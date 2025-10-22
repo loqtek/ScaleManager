@@ -1,0 +1,67 @@
+name: Lint Auto Check
+
+on:
+  pull_request:
+    branches:
+      - main
+      - staging
+      - dev
+
+permissions:
+  contents: read
+  pull-requests: write
+  
+jobs:
+  lint:
+    name: Run Lint Auto Checks
+    runs-on: ubuntu-latest
+
+    steps:
+      # Checkout to repo
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # Install Bun
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v1
+        with:
+          bun-version: latest
+
+      # Install deps
+      - name: Install dependencies
+        run: bun install
+
+      # Run ESLint check
+      - name: Run ESLint
+        id: lint
+        run: bun run lint
+
+      # Comment on PR if lint fails
+      - name: Comment on PR if lint fails
+        if: failure()
+        uses: marocchino/sticky-pull-request-comment@v2
+        with:
+          message: |
+            ```diff
+            ==================================================
+            ||       ⚠️  ESLint Checks Failed! ❌          ||
+            ==================================================
+            ```
+            Please review the errors and fix them **before requesting a review.**
+
+            **Tips:**
+            - Run `bun run lint` locally to see detailed issues.
+            - Commit fixes, push again, and this check will re-run automatically.
+
+      # Comment on PR if lint passes
+      - name: Comment on PR if lint passes
+        if: success()
+        uses: marocchino/sticky-pull-request-comment@v2
+        with:
+          message: |
+            ```ini
+            ==================================================
+            ||        ✅ ESLint Checks Passed! 🎉          ||
+            ==================================================
+            ```
+            All linting checks completed successfully. You can now request a review.

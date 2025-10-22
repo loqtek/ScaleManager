@@ -8,7 +8,7 @@ import { MaterialIcons } from "@expo/vector-icons";
 import Toast from "react-native-toast-message";
 import { useApiKeys } from "@/app/funcs/apikeys";
 
-export default function apiKeysScreen() {
+export default function ApiKeysScreen() {
   const {
     apiKeys,
     newKeyExpire,
@@ -26,7 +26,7 @@ export default function apiKeysScreen() {
 
   useEffect(() => {
     fetchApiKeys();
-  }, []);
+  }, [fetchApiKeys]);
 
   const handleCreateKeyWithDisplay = async () => {
     const result = await handleCreateKey();
@@ -69,8 +69,8 @@ export default function apiKeysScreen() {
       visible={showKeyModal}
       onRequestClose={closeKeyModal}
     >
-      <View className="flex-1 justify-center items-center px-4">
-        <View className="bg-zinc-800 rounded-2xl p-6 w-full max-w-md">
+      <View className="flex-1 justify-center items-center px-4 bg-black/50">
+        <View className="bg-zinc-800 rounded-2xl p-6 w-full max-w-md shadow-2xl">
           <View className="items-center mb-4">
             <MaterialIcons name="vpn-key" size={48} color="#10b981" />
             <Text className="text-white text-xl font-bold mt-2">
@@ -91,6 +91,7 @@ export default function apiKeysScreen() {
             <TouchableOpacity
               onPress={() => copyToClipboard(newApiKey!)}
               className="flex-1 bg-blue-600 py-3 rounded-lg flex-row items-center justify-center"
+              activeOpacity={0.7}
             >
               <MaterialIcons name="content-copy" size={18} color="white" />
               <Text className="text-white font-semibold ml-2">Copy Key</Text>
@@ -99,6 +100,7 @@ export default function apiKeysScreen() {
             <TouchableOpacity
               onPress={closeKeyModal}
               className="flex-1 bg-zinc-600 py-3 rounded-lg"
+              activeOpacity={0.7}
             >
               <Text className="text-white font-semibold text-center">Done</Text>
             </TouchableOpacity>
@@ -113,7 +115,7 @@ export default function apiKeysScreen() {
   );
 
   return (
-    <SafeAreaView className="flex-1 bg-zinc-900 px-4 pt-4">
+    <SafeAreaView className="flex-1 bg-zinc-900">
       {loading ? (
         <View className="flex-1 justify-center items-center">
           <ActivityIndicator size="large" color="#ffffff" />
@@ -129,7 +131,7 @@ export default function apiKeysScreen() {
           {/* Header */}
           <View className="mb-6 flex-row justify-between items-center">
             <Text className="text-white text-2xl font-bold">API Keys</Text>
-            <TouchableOpacity onPress={fetchApiKeys}>
+            <TouchableOpacity onPress={fetchApiKeys} activeOpacity={0.7}>
               <MaterialIcons name="refresh" size={24} color="white" />
             </TouchableOpacity>
           </View>
@@ -170,7 +172,7 @@ export default function apiKeysScreen() {
             <TouchableOpacity
               onPress={handleCreateKeyWithDisplay}
               className="bg-green-600 p-3 rounded-lg flex-row items-center justify-center"
-              activeOpacity={0.8}
+              activeOpacity={0.7}
             >
               <MaterialIcons name="add" size={18} color="white" />
               <Text className="text-white text-center font-semibold ml-1">
@@ -265,6 +267,7 @@ export default function apiKeysScreen() {
                       className={`p-3 rounded-lg flex-row items-center justify-center ${
                         expired ? "bg-zinc-600" : "bg-red-600"
                       }`}
+                      activeOpacity={0.7}
                     >
                       <MaterialIcons 
                         name={expired ? "block" : "delete"} 

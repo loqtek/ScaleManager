@@ -9,7 +9,6 @@ import {
   Alert,
   RefreshControl,
 } from "react-native";
-import Toast from "react-native-toast-message";
 import { MaterialIcons } from "@expo/vector-icons";
 import { useRoutes } from "@/app/funcs/routes";
 
@@ -22,9 +21,7 @@ export default function RoutesScreen() {
     handleDisableRoute,
     handleEnableRoute,
     routes,
-    setRoutes,
     loading,
-    setLoading,
     fetchRoutes
   } = useRoutes();
 

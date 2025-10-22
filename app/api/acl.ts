@@ -1,4 +1,3 @@
-import { getServerConfig } from "../utils/getServer";
 import { getApiEndpoints, makeApiRequest } from "../utils/apiUtils";
 
 export async function getACLPolicy() {
