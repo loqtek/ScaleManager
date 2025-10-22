@@ -44,6 +44,7 @@ export default function PreAuthKeysScreen() {
         text1: "Copy Failed",
         text2: "Could not copy to clipboard",
       });
+      console.error(error)
     }
   };
 

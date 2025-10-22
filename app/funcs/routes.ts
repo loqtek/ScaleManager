@@ -1,5 +1,5 @@
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { getServerRoutes, disableRoute, enableRoute } from "../api/routes";
 import Toast from "react-native-toast-message";
 

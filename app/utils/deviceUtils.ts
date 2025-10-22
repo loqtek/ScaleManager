@@ -47,6 +47,7 @@ export const copyToClipboard = async (text: string, label: string) => {
       text1: "Copy Failed",
       text2: "Could not copy to clipboard",
     });
+    console.error(error)
   }
 };
 

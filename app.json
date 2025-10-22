@@ -2,7 +2,7 @@
   "expo": {
     "name": "Scale Manager",
     "slug": "scaleManager",
-    "version": "1.2.2",
+    "version": "1.2.3",
     "orientation": "portrait",
     "icon": "./assets/images/noBgScaleManagerLogo.png",
     "scheme": "myapp",
@@ -39,7 +39,9 @@
           "resizeMode": "contain",
           "backgroundColor": "#ffffff"
         }
-      ]
+      ],
+      "expo-font",
+      "expo-web-browser"
     ],
     "experiments": {
       "typedRoutes": true

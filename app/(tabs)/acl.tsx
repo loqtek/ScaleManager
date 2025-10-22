@@ -18,7 +18,6 @@ export default function ACLScreen() {
   const {
     // State
     policy,
-    originalPolicy,
     loading,
     saving,
     policyVersions,
@@ -26,8 +25,6 @@ export default function ACLScreen() {
     editing,
     editText,
     showSetupGuide,
-    showErrorModal,
-    currentError,
 
     // Actions
     fetchPolicy,
@@ -41,8 +38,6 @@ export default function ACLScreen() {
     // Modal controls
     setShowVersions,
     setShowSetupGuide,
-    setShowErrorModal,
-    setCurrentError,
     setEditText,
   } = useACL();
 

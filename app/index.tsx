@@ -8,7 +8,6 @@ import {
   Platform,
   ActivityIndicator,
   Image,
-  Modal,
   ScrollView
 } from "react-native";
 import { MaterialIcons } from "@expo/vector-icons";

@@ -120,6 +120,7 @@ export function useUsers() {
                 text1: "⚠️ Add Failed",
                 text2: "An error occurred while adding the user.",
               });
+              console.error(error)
             }
           },
         },
@@ -205,6 +206,7 @@ export function useUsers() {
                 text1: "⚠️ Rename Failed",
                 text2: "An error occurred while renaming the user.",
               });
+              console.error(error)
             }
           },
         },
@@ -262,6 +264,7 @@ export function useUsers() {
         text1: "⚠️ Delete Failed",
         text2: "An error occurred while deleting the user.",
       });
+      console.error(error)
     }
   };
 
