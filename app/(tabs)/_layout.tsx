@@ -12,7 +12,7 @@ export default function TabLayout() {
   useEffect(() => {
     async function checkVersion() {
       const serverConf = await getServerConfig();
-      if (serverConf?.version && serverConf.version === "0.26") {
+      if (serverConf?.version && (serverConf.version.startsWith("0.26") || serverConf.version.startsWith("0.27"))) {
         setHideRoutes(true);
       }
     }

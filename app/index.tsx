@@ -13,7 +13,7 @@ import {
 import { MaterialIcons } from "@expo/vector-icons";
 import { useLogin, HeadscaleVersion } from "@/app/funcs/index";
 
-const VERSION_OPTIONS: HeadscaleVersion[] = ["0.26.x", "0.25.x", "0.24.x", "0.23.x"];
+const VERSION_OPTIONS: HeadscaleVersion[] = ["0.27.x", "0.26.x", "0.25.x", "0.24.x", "0.23.x"];
 
 export default function LoginScreen() {
   const {

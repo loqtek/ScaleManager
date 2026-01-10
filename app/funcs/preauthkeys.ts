@@ -14,8 +14,8 @@ export const usePreAuthManager = () => {
   // Helper function to get the correct user identifier based on API version
   const getUserIdentifier = (user: any, version: string): string => {
     
-    // Check if this is v0.26 or higher
-    if (version && (version.startsWith('0.26'))) {
+    // Check if this is v0.26 or higher (including v0.27)
+    if (version && (version.startsWith('0.26') || version.startsWith('0.27'))) {
       // For v0.26, return user ID as string (API will convert to number)
       const userId = user.id ? user.id.toString() : user.name;
       return userId;

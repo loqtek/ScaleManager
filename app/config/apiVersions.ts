@@ -420,4 +420,101 @@ export const API_VERSION_MAP: Record<string, ApiEndpoints> = {
       }),
     },
   },
+
+  'v0.27': {
+    // v0.27 uses the same API endpoints as v0.26
+    apikeys: {
+      get: '/api/v1/apikey',
+      createApiKey: (expiration: string) => ({
+        url: `/api/v1/apikey`,
+        method: 'POST',
+        body: { expiration }
+      }),
+      expireApiKey: (prefix: string) => ({
+        url: `/api/v1/apikey/expire`,
+        method: 'POST',
+        body: { prefix }
+      }),
+    },
+    
+    devices: {
+      get: '/api/v1/node',
+      registerDevice: (user: number, key: string) => ({
+        url: `/api/v1/node/register`,
+        method: 'POST',
+        body: { user, key }
+      }),
+      renameDevice: (id: number, newName: string) => ({
+        url: `/api/v1/node/${id}/rename/${newName}`,
+        method: 'POST',
+      }),
+      deleteDevice: (id: number) => ({
+        url: `/api/v1/node/${id}`,
+        method: 'DELETE',
+      }),
+      addTags: (id: number, tags: string[]) => ({
+        url: `/api/v1/node/${id}/tags`,
+        method: 'POST',
+        body: { tags }
+      }),
+      changeUser: (id: number, user: number) => ({
+        url: `/api/v1/node/${id}/user`,
+        method: 'POST',
+        body: { user }
+      }),
+    },
+
+    preauthkeys: {
+      get: (userId?: number) => ({
+        url: userId ? `/api/v1/preauthkey?user=${userId}` : `/api/v1/preauthkey`,
+        method: 'GET',
+      }),
+      createPreauthKey: (user: number, expiration: string, reusable: boolean) => ({
+        url: `/api/v1/preauthkey`,
+        method: 'POST',
+        body: { user, expiration, reusable },
+      }),
+      expirePreauthKey: (user: number, key: string) => ({
+        url: `/api/v1/preauthkey/expire`,
+        method: 'POST',
+        body: { user, key },
+      }),
+    },
+
+    // v0.27 doesn't have routes - this section can be omitted or kept for compatibility
+    routes: {
+      get: '/api/v1/routes',
+      update: (id: string, routes: string[]) => ({ // enabled: boolean is substituted for the array of routes
+        url: `/api/v1/node/${id}/approve_routes`,
+        method: 'POST',
+        body: { routes }
+      }),
+    },
+
+    users: {
+      get: '/api/v1/user',
+      addUser: (name: string) => ({
+        url: `/api/v1/user`,
+        method: 'POST',
+        body: { name }
+      }),
+      deleteUser: (id: number) => ({
+        url: `/api/v1/user/${id}`,
+        method: 'DELETE',
+      }),
+      renameUser: (id: number, newName: string) => ({
+        url: `/api/v1/user/${id}/rename/${newName}`,
+        method: 'POST',
+      }),
+    },
+
+    acl: {
+      getPolicy: '/api/v1/policy',
+      updatePolicy: (policy: any) => ({
+        url: '/api/v1/policy',
+        method: 'PUT',
+        body: JSON.stringify(policy)
+      }),
+    },
+  },
 };

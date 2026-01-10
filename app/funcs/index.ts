@@ -5,7 +5,7 @@ import Toast from "react-native-toast-message";
 import { testAPIKey } from "../api/login";
 import { parseVersion } from "../utils/getServer";
 
-export type HeadscaleVersion = "0.23.x" | "0.24.x" | "0.25.x" | "0.26.x";
+export type HeadscaleVersion = "0.23.x" | "0.24.x" | "0.25.x" | "0.26.x" | "0.27.x";
 
 export function useLogin() {
   const router = useRouter();
