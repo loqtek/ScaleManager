@@ -5,6 +5,8 @@
 </p>
 
 # Welcome To Scale Manager
+(We are not officially affilated with Headscale OR Tailscale)
+
 This app is for [Headscale](https://github.com/juanfont/headscale) users who want to manage their server via HTTP/HTTPS without 
 needing a Web UI or using Headscales gRPC.
 
