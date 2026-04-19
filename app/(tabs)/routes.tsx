@@ -2,13 +2,13 @@ import { useEffect } from "react";
 import {
   Text,
   View,
-  SafeAreaView,
   ScrollView,
   ActivityIndicator,
   TouchableOpacity,
   Alert,
   RefreshControl,
 } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 import { MaterialIcons } from "@expo/vector-icons";
 import { useRoutes } from "@/app/funcs/routes";
 
@@ -35,7 +35,7 @@ export default function RoutesScreen() {
 
   if (loading) {
     return (
-      <SafeAreaView className="flex-1 bg-zinc-900 justify-center items-center">
+      <SafeAreaView edges={["top", "left", "right"]} className="flex-1 bg-zinc-900 justify-center items-center">
         <ActivityIndicator size="large" color="#fff" />
         <Text className="text-white mt-4">Loading Routes...</Text>
       </SafeAreaView>
@@ -43,7 +43,7 @@ export default function RoutesScreen() {
   }
 
   return (
-    <SafeAreaView className="flex-1 bg-zinc-900">
+    <SafeAreaView edges={["top", "left", "right"]} className="flex-1 bg-zinc-900">
       {loading ? (
         <View className="flex-1 justify-center items-center">
           <ActivityIndicator size="large" color="#fff" />

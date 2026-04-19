@@ -4,13 +4,13 @@ import {
   Text,
   TouchableOpacity,
   ScrollView,
-  SafeAreaView,
   Modal,
   TextInput,
   KeyboardAvoidingView,
   Platform,
   ActivityIndicator,
 } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 import { MaterialIcons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { useAccountsManager, HeadscaleVersion } from "@/app/funcs/accounts";

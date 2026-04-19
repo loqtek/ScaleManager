@@ -2,7 +2,6 @@ import React, { useEffect } from "react";
 import {
   Text,
   View,
-  SafeAreaView,
   TouchableOpacity,
   ActivityIndicator,
   ScrollView,
@@ -10,6 +9,7 @@ import {
   Linking,
   Alert,
 } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import { FontAwesome, MaterialIcons, Ionicons } from "@expo/vector-icons";
 import { useDashboardData } from "@/app/funcs/tabsHome";
@@ -92,7 +92,7 @@ export default function IndexScreen() {
   }, []);
 
   return (
-    <SafeAreaView className="flex-1 bg-zinc-900">
+    <SafeAreaView edges={["top", "left", "right"]} className="flex-1 bg-zinc-900">
       <ScrollView
         className="flex-1 px-4 pt-4"
         refreshControl={<RefreshControl refreshing={loading} onRefresh={onRefresh} />}
