@@ -1,4 +1,5 @@
 import { getApiEndpoints, makeApiRequest } from "../utils/apiUtils";
+import { isV028OrHigher } from "../utils/headscaleVersion";
 
 export async function getPreAuthKeys(userIdentifier?: string) {
   const config = await getApiEndpoints();
@@ -12,7 +13,7 @@ export async function getPreAuthKeys(userIdentifier?: string) {
   });
 }
 
-export async function createPreAuthKey(userIdentifier: string, expiration: string, reusable: boolean = false) {
+export async function createPreAuthKey(userIdentifier: string | number, expiration: string, reusable: boolean = false) {
   const config = await getApiEndpoints();
   if (!config) return null;
 
@@ -26,13 +27,16 @@ export async function createPreAuthKey(userIdentifier: string, expiration: strin
   });
 }
 
-export async function expirePreAuthKey(userIdentifier: string, key: string) {
+export async function expirePreAuthKey(userIdentifier: string | number, keyOrId: string, version?: string) {
   const config = await getApiEndpoints();
   if (!config) return null;
 
   const { endpoints } = config;
   
-  const apiCall = endpoints.preauthkeys.expirePreauthKey(userIdentifier, key);
+  // v0.28 switched to ID-based operations.
+  const identifier = isV028OrHigher(version || config.serverConf?.version) ? keyOrId : userIdentifier;
+  const keyValue = keyOrId;
+  const apiCall = endpoints.preauthkeys.expirePreauthKey(identifier, keyValue);
   
   return await makeApiRequest(apiCall.url, {
     method: apiCall.method,

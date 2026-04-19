@@ -4,6 +4,7 @@ import Toast from "react-native-toast-message";
 import { getUsers, addUser, deleteUser, renameUser } from "../api/users";
 import { getDevices } from "../api/devices";
 import { getApiEndpoints } from "../utils/apiUtils";
+import { isV026OrHigher } from "../utils/headscaleVersion";
 
 export function useUsers() {
   const [users, setUsers] = useState<any[]>([]);
@@ -172,11 +173,10 @@ export function useUsers() {
               }
 
               const { serverConf } = config;
-              const versionKey = serverConf.version ? `v${serverConf.version.split('.').slice(0, 2).join('.')}` : 'v0.26';
-              const isV026OrHigher = versionKey >= 'v0.26';
+              const useNumericIds = isV026OrHigher(serverConf.version);
               
               // Use user ID for v0.26+ or name for older versions
-              const response = await renameUser(isV026OrHigher ? id : name, newName.trim());
+              const response = await renameUser(useNumericIds ? id : name, newName.trim());
               if (response) {
                 // Update local state immediately for better UX
                 setUsers((prev) =>
@@ -231,11 +231,10 @@ export function useUsers() {
       }
 
       const { serverConf } = config;
-      const versionKey = serverConf.version ? `v${serverConf.version.split('.').slice(0, 2).join('.')}` : 'v0.26';
-      const isV026OrHigher = versionKey >= 'v0.26';
+      const useNumericIds = isV026OrHigher(serverConf.version);
       
       // Use user ID for v0.26+ or name for older versions
-      const response = await deleteUser(isV026OrHigher ? userId : userName);
+      const response = await deleteUser(useNumericIds ? userId : userName);
       if (response) {
         // Remove from local state immediately
         setUsers((prev) => prev.filter((user) => user.id !== userId));

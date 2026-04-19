@@ -41,6 +41,7 @@ export default function DeviceDetailScreen() {
     handleRemoveRoute,
     handleDelete,
   } = useDeviceDetail(deviceData);
+  const appliedTags = device?.tags || device?.validTags || [];
 
   const handleDeleteWithNavigation = async () => {
     await handleDelete();
@@ -319,17 +320,17 @@ export default function DeviceDetailScreen() {
               </TouchableOpacity>
             </View>
             
-            {device.validTags?.length > 0 && (
-              <InfoRow label="Valid Tags" value={device.validTags.join(", ")} />
+            {appliedTags.length > 0 && (
+              <InfoRow label="Tags" value={appliedTags.join(", ")} />
             )}
-            {device.forcedTags?.length > 0 && (
-              <InfoRow label="Forced Tags" value={device.forcedTags.join(", ")} />
+            {(device.forcedTags?.length ?? 0) > 0 && (
+              <InfoRow label="Forced Tags" value={(device.forcedTags || []).join(", ")} />
             )}
-            {device.invalidTags?.length > 0 && (
-              <InfoRow label="Invalid Tags" value={device.invalidTags.join(", ")} />
+            {(device.invalidTags?.length ?? 0) > 0 && (
+              <InfoRow label="Invalid Tags" value={(device.invalidTags || []).join(", ")} />
             )}
             
-            {(!device.validTags?.length && !device.forcedTags?.length && !device.invalidTags?.length) && (
+            {(!appliedTags.length && !device.forcedTags?.length && !device.invalidTags?.length) && (
               <Text className="text-slate-400 text-center py-4">No tags assigned</Text>
             )}
           </View>

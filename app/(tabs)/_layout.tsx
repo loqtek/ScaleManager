@@ -2,6 +2,7 @@ import { Tabs } from "expo-router";
 import { MaterialCommunityIcons, Entypo } from "@expo/vector-icons";
 import { getServerConfig } from "../utils/getServer";
 import { useEffect, useState } from "react";
+import { isV026OrHigher } from "../utils/headscaleVersion";
 
 
 
@@ -12,7 +13,7 @@ export default function TabLayout() {
   useEffect(() => {
     async function checkVersion() {
       const serverConf = await getServerConfig();
-      if (serverConf?.version && (serverConf.version.startsWith("0.26") || serverConf.version.startsWith("0.27"))) {
+      if (isV026OrHigher(serverConf?.version)) {
         setHideRoutes(true);
       }
     }

@@ -15,7 +15,7 @@ import { MaterialIcons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { useAccountsManager, HeadscaleVersion } from "@/app/funcs/accounts";
 
-const VERSION_OPTIONS: HeadscaleVersion[] = ["0.27.x", "0.26.x", "0.25.x", "0.24.x", "0.23.x"];
+const VERSION_OPTIONS: HeadscaleVersion[] = ["0.28.x", "0.27.x", "0.26.x", "0.25.x", "0.24.x", "0.23.x"];
 
 export default function Accounts() {
   const {
@@ -183,7 +183,7 @@ export default function Accounts() {
                 
                 {editingVersion === acc.name ? (
                   <VersionSelector 
-                    currentVersion={acc.version}
+                    currentVersion={acc.version as HeadscaleVersion}
                     onVersionChange={(newVersion) => {
                       updateAccountVersion(acc.name, newVersion);
                       setEditingVersion(null);

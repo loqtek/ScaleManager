@@ -6,6 +6,7 @@ import { renameDevice, deleteDevice, addTags, changeUser } from "../api/devices"
 import { getUsers } from "../api/users";
 import { updateRoute } from "../api/routes";
 import { getVersionInfo } from "../utils/deviceUtils";
+import { isV028OrHigher } from "../utils/headscaleVersion";
 
 export function useDeviceDetail(deviceData: string | undefined) {
   const [device, setDevice] = useState<Device | null>(null);
@@ -107,9 +108,18 @@ export function useDeviceDetail(deviceData: string | undefined) {
         });
         return;
       }
+      if (isV028OrHigher(versionInfo.versionKey.replace(/^v/, ""))) {
+        Toast.show({
+          type: "error",
+          position: "top",
+          text1: "Unsupported on v0.28+",
+          text2: "Headscale removed node reassignment between users.",
+        });
+        return;
+      }
       
       const selectedUser = users.find(u => u.name === newUser);
-      const result = await changeUser(device.id, selectedUser);
+      const result = await changeUser(Number(device.id), selectedUser);
       
       if (result) {
         setDevice({ 
@@ -173,9 +183,12 @@ export function useDeviceDetail(deviceData: string | undefined) {
       const result = await addTags(isV026OrHigher ? device.id : device.name, tagsArray);
       
       if (result) {
+        const existingTags = device.tags || device.validTags || [];
+        const mergedTags = [...new Set([...existingTags, ...tagsArray])];
         setDevice({ 
           ...device, 
-          validTags: [...new Set([...device.validTags, ...tagsArray])]
+          tags: mergedTags,
+          validTags: mergedTags
         });
         setShowTagsModal(false);
         setNewTags("");

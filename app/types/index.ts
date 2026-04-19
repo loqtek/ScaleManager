@@ -28,9 +28,12 @@ export interface Device {
   } | null;
   createdAt: string;
   registerMethod: string;
-  forcedTags: string[];
-  invalidTags: string[];
-  validTags: string[];
+  // Headscale <=0.27.x
+  forcedTags?: string[];
+  invalidTags?: string[];
+  validTags?: string[];
+  // Headscale >=0.28.x
+  tags?: string[];
   givenName: string;
   online: boolean;
   approvedRoutes: string[];
