@@ -2,20 +2,21 @@ import { useEffect, useState } from "react";
 import { getPreAuthKeys, createPreAuthKey, expirePreAuthKey } from "../api/preauthkeys";
 import { getUsers } from "../api/users";
 import { getApiEndpoints } from "../utils/apiUtils";
+import { isV026OrHigher, isV028OrHigher } from "../utils/headscaleVersion";
 import Toast from "react-native-toast-message";
 import { calculateExpirationDate } from "../utils/time";
 
 export const usePreAuthManager = () => {
-  const [users, setUsers] = useState([]);
-  const [preAuthKeys, setPreAuthKeys] = useState({});
+  const [users, setUsers] = useState<any[]>([]);
+  const [preAuthKeys, setPreAuthKeys] = useState<Record<string, any[]>>({});
   const [loading, setLoading] = useState(true);
   const [apiVersion, setApiVersion] = useState<string>('');
 
   // Helper function to get the correct user identifier based on API version
   const getUserIdentifier = (user: any, version: string): string => {
     
-    // Check if this is v0.26 or higher (including v0.27)
-    if (version && (version.startsWith('0.26') || version.startsWith('0.27'))) {
+    // v0.26+ uses user IDs across endpoints.
+    if (isV026OrHigher(version)) {
       // For v0.26, return user ID as string (API will convert to number)
       const userId = user.id ? user.id.toString() : user.name;
       return userId;
@@ -42,20 +43,29 @@ export const usePreAuthManager = () => {
       const userList = usersRes?.users || [];
       setUsers(userList);
 
-      // Fetch preauth keys for each user using the correct identifier
       const allKeys: Record<string, any[]> = {};
-      
-      for (const user of userList) {
-        const userIdentifier = getUserIdentifier(user, detectedVersion);
-        const userKey = getUserKey(user);
-        
-        
-        try {
-          const keysRes = await getPreAuthKeys(userIdentifier);
-          allKeys[userKey] = keysRes?.preAuthKeys || [];
-        } catch (error) {
-          console.error(`Failed to fetch preauth keys for user ${userKey}:`, error);
-          allKeys[userKey] = [];
+
+      // v0.28+ preauth key listing is global, so we fetch once and fan out by user.
+      if (isV028OrHigher(detectedVersion)) {
+        const keysRes = await getPreAuthKeys();
+        const keys = keysRes?.preAuthKeys || [];
+
+        for (const user of userList) {
+          const userKey = getUserKey(user);
+          allKeys[userKey] = keys.filter((key: any) => key?.user?.name === user.name);
+        }
+      } else {
+        for (const user of userList) {
+          const userIdentifier = getUserIdentifier(user, detectedVersion);
+          const userKey = getUserKey(user);
+
+          try {
+            const keysRes = await getPreAuthKeys(userIdentifier);
+            allKeys[userKey] = keysRes?.preAuthKeys || [];
+          } catch (error) {
+            console.error(`Failed to fetch preauth keys for user ${userKey}:`, error);
+            allKeys[userKey] = [];
+          }
         }
       }
       
@@ -93,7 +103,7 @@ export const usePreAuthManager = () => {
     const userIdentifier = getUserIdentifier(user, apiVersion);
     console.log(`Expiring key ${keyId} for user ${userName} with identifier ${userIdentifier}`);
     
-    const result = await expirePreAuthKey(userIdentifier, keyId);
+    const result = await expirePreAuthKey(userIdentifier, keyId, apiVersion);
     
     if (result) {
       Toast.show({

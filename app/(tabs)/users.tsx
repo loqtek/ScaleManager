@@ -1,8 +1,9 @@
 import React from "react";
 import {
-  Text, View, SafeAreaView, ScrollView, ActivityIndicator, 
+  Text, View, ScrollView, ActivityIndicator, 
   TouchableOpacity, RefreshControl, Alert
 } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 import { MaterialIcons } from "@expo/vector-icons";
 import { useUsers } from "@/app/funcs/users";
 
@@ -50,7 +51,7 @@ export default function UsersScreen() {
   };
 
   return (
-    <SafeAreaView className="flex-1 bg-zinc-900">
+    <SafeAreaView edges={["top", "left", "right"]} className="flex-1 bg-zinc-900">
       {loading ? (
         <View className="flex-1 justify-center items-center">
           <ActivityIndicator size="large" color="#ffffff" />

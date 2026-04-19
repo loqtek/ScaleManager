@@ -4,6 +4,7 @@ import { getUsers } from "../api/users";
 import Toast from "react-native-toast-message";
 import { useRouter } from "expo-router";
 import { getApiEndpoints } from "../utils/apiUtils";
+import { isV026OrHigher } from "../utils/headscaleVersion";
 import { Device } from "../types";
 
 export function useDevices() {
@@ -135,11 +136,10 @@ export function useDevices() {
       }
 
       const { serverConf } = config;
-      const versionKey = serverConf.version ? `v${serverConf.version.split('.').slice(0, 2).join('.')}` : 'v0.26';
-      const isV026OrHigher = versionKey >= 'v0.26';
+      const useNumericIds = isV026OrHigher(serverConf.version);
       
       // Use user ID for v0.26+ or name for older versions
-      const userParam = isV026OrHigher ? user.id : user.name;
+      const userParam = useNumericIds ? user.id : user.name;
       console.log(userParam, key)
       const result = await registerDevice(userParam, key);
 

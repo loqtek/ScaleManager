@@ -1,5 +1,6 @@
 import { getServerConfig } from "../utils/getServer";
 import { API_VERSION_MAP, ApiEndpoints } from "../config/apiVersions";
+import { getVersionKey } from "./headscaleVersion";
 
 
 // Helper function to get the correct API endpoints based on server version
@@ -12,11 +13,7 @@ export async function getApiEndpoints(): Promise<{ endpoints: ApiEndpoints; serv
   }
 
   // Map version to API version key
-  let versionKey = 'v0.26'; // Default
-  if (serverConf.version) {
-    // Convert "0.23.x" -> "v0.23", "0.26.x" -> "v0.26", etc.
-    versionKey = `v${serverConf.version.split('.').slice(0, 2).join('.')}`;
-  }
+  const versionKey = getVersionKey(serverConf.version);
 
   const endpoints = API_VERSION_MAP[versionKey];
   if (!endpoints) {

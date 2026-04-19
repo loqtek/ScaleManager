@@ -1,8 +1,9 @@
 import React, { useEffect, useState } from "react";
 import {
-  Text, View, SafeAreaView, ScrollView, TouchableOpacity,
+  Text, View, ScrollView, TouchableOpacity,
   ActivityIndicator, RefreshControl, Modal, TextInput, Alert, Clipboard
 } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 import { MaterialIcons } from "@expo/vector-icons";
 import Toast from "react-native-toast-message";
 import { usePreAuthManager } from "@/app/funcs/preauthkeys";
@@ -129,7 +130,7 @@ export default function PreAuthKeysScreen() {
   };
 
   return (
-    <SafeAreaView className="flex-1 bg-zinc-900">
+    <SafeAreaView edges={["top", "left", "right"]} className="flex-1 bg-zinc-900">
       {loading ? (
         <View className="flex-1 justify-center items-center">
           <ActivityIndicator size="large" color="#ffffff" />
@@ -266,16 +267,18 @@ export default function PreAuthKeysScreen() {
 
                                 {/* Actions */}
                                 <View className="flex-row space-x-2">
-                                  <TouchableOpacity
-                                    onPress={() => copyToClipboard(key.key, "Pre-auth key")}
-                                    className="bg-blue-600 p-2 rounded"
-                                  >
-                                    <MaterialIcons name="content-copy" size={16} color="white" />
-                                  </TouchableOpacity>
+                                  {!!key.key && (
+                                    <TouchableOpacity
+                                      onPress={() => copyToClipboard(key.key, "Pre-auth key")}
+                                      className="bg-blue-600 p-2 rounded"
+                                    >
+                                      <MaterialIcons name="content-copy" size={16} color="white" />
+                                    </TouchableOpacity>
+                                  )}
                                   
                                   {!key.used && !isExpired(key.expiration) && (
                                     <TouchableOpacity
-                                      onPress={() => confirmExpireKey(key.key, user.name)}
+                                      onPress={() => confirmExpireKey(String(key.id), user.name)}
                                       className="bg-red-600 p-2 rounded ml-2"
                                     >
                                       <MaterialIcons name="block" size={16} color="white" />
@@ -285,17 +288,19 @@ export default function PreAuthKeysScreen() {
                               </View>
 
                               {/* Key Value */}
-                              <View className="bg-zinc-800 p-3 rounded border border-zinc-600">
-                                <View className="flex-row justify-between items-center mb-1">
-                                  <Text className="text-slate-400 text-xs">Pre-Auth Key:</Text>
-                                  <TouchableOpacity onPress={() => copyToClipboard(key.key, "Key")}>
-                                    <Text className="text-blue-400 text-xs">Tap to copy</Text>
-                                  </TouchableOpacity>
+                              {!!key.key && (
+                                <View className="bg-zinc-800 p-3 rounded border border-zinc-600">
+                                  <View className="flex-row justify-between items-center mb-1">
+                                    <Text className="text-slate-400 text-xs">Pre-Auth Key:</Text>
+                                    <TouchableOpacity onPress={() => copyToClipboard(key.key, "Key")}>
+                                      <Text className="text-blue-400 text-xs">Tap to copy</Text>
+                                    </TouchableOpacity>
+                                  </View>
+                                  <Text className="text-white font-mono text-sm break-all" selectable>
+                                    {key.key}
+                                  </Text>
                                 </View>
-                                <Text className="text-white font-mono text-sm break-all" selectable>
-                                  {key.key}
-                                </Text>
-                              </View>
+                              )}
                             </View>
                           );
                         })

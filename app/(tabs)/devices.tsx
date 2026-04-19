@@ -2,13 +2,13 @@ import React, { useState } from "react";
 import {
   Text,
   View,
-  SafeAreaView,
   ScrollView,
   TouchableOpacity,
   ActivityIndicator,
   RefreshControl,
   TextInput,
 } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 import { MaterialIcons } from "@expo/vector-icons";
 import { useDevices } from "@/app/funcs/devices";
 import { RegisterDeviceModal } from "@/app/components/RegisterDeviceModal";
@@ -61,7 +61,7 @@ export default function DevicesScreen() {
 
 
   return (
-    <SafeAreaView className="flex-1 bg-zinc-900">
+    <SafeAreaView edges={["top", "left", "right"]} className="flex-1 bg-zinc-900">
       {loading ? (
         <View className="flex-1 justify-center items-center">
           <ActivityIndicator size="large" color="#ffffff" />
@@ -167,7 +167,9 @@ export default function DevicesScreen() {
               </Text>
             </View>
           ) : (
-            filteredAndSortedDevices.map((device) => (
+            filteredAndSortedDevices.map((device) => {
+              const displayTags = device.tags ?? device.validTags ?? [];
+              return (
               <TouchableOpacity
                 key={device.id}
                 onPress={() => handleDevicePress(device)}
@@ -247,17 +249,17 @@ export default function DevicesScreen() {
                   )}
 
                   {/* Tags */}
-                  {device.validTags?.length > 0 && (
+                  {displayTags.length > 0 && (
                     <View className="flex-row flex-wrap mt-2">
-                      {device.validTags.slice(0, 3).map((tag, index) => (
+                      {displayTags.slice(0, 3).map((tag, index) => (
                         <View key={index} className="bg-zinc-700 px-2 py-1 rounded mr-2 mb-1">
                           <Text className="text-slate-300 text-xs">{tag}</Text>
                         </View>
                       ))}
-                      {device.validTags.length > 3 && (
+                      {displayTags.length > 3 && (
                         <View className="bg-zinc-700 px-2 py-1 rounded">
                           <Text className="text-slate-300 text-xs">
-                            +{device.validTags.length - 3}
+                            +{displayTags.length - 3}
                           </Text>
                         </View>
                       )}
@@ -271,7 +273,7 @@ export default function DevicesScreen() {
                   <MaterialIcons name="chevron-right" size={16} color="#6b7280" />
                 </View>
               </TouchableOpacity>
-            ))
+            )})
           )}
         </ScrollView>
       )}

@@ -2,7 +2,6 @@ import React from "react";
 import {
   Text,
   View,
-  SafeAreaView,
   ScrollView,
   TouchableOpacity,
   ActivityIndicator,
@@ -10,6 +9,7 @@ import {
   Modal,
   TextInput,
 } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 import { MaterialIcons } from "@expo/vector-icons";
 import SetupGuideModal from "@/components/SetupGuideModal";
 import { useACL } from "@/hooks/useACL";
@@ -42,7 +42,7 @@ export default function ACLScreen() {
   } = useACL();
 
   return (
-    <SafeAreaView className="flex-1 bg-zinc-900">
+    <SafeAreaView edges={["top", "left", "right"]} className="flex-1 bg-zinc-900">
       <ScrollView
         className="flex-1 px-4 pt-4"
         refreshControl={<RefreshControl refreshing={loading} onRefresh={onRefresh} />}
@@ -224,7 +224,7 @@ export default function ACLScreen() {
         animationType="slide"
         presentationStyle="pageSheet"
       >
-        <SafeAreaView className="flex-1 bg-zinc-900">
+        <SafeAreaView edges={["top", "left", "right"]} className="flex-1 bg-zinc-900">
           <View className="flex-row justify-between items-center p-4 border-b border-zinc-700 bg-zinc-800">
             <TouchableOpacity 
               onPress={cancelEditing}
@@ -279,7 +279,7 @@ export default function ACLScreen() {
         animationType="slide"
         presentationStyle="pageSheet"
       >
-        <SafeAreaView className="flex-1 bg-zinc-900">
+        <SafeAreaView edges={["top", "left", "right"]} className="flex-1 bg-zinc-900">
           <View className="flex-row justify-between items-center p-4 border-b border-zinc-700 bg-zinc-800">
             <TouchableOpacity 
               onPress={() => setShowVersions(false)}

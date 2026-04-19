@@ -16,15 +16,15 @@ export interface ApiEndpoints {
 
   preauthkeys: {
     get: (userId?: any) => { url: string; method: string };
-    createPreauthKey: (user: number, expiration: string, reusable: boolean) => { 
+    createPreauthKey: (user: any, expiration: string, reusable: boolean) => { 
       url: string; 
       method: string; 
-      body: { user: number; expiration: string; reusable: boolean }; 
+      body: any; 
     };
-    expirePreauthKey: (user: number, key: string) => { 
+    expirePreauthKey: (user: any, key: string) => { 
       url: string; 
       method: string; 
-      body: { user: number; key: string }; 
+      body: any; 
     };
   };
 
@@ -485,6 +485,104 @@ export const API_VERSION_MAP: Record<string, ApiEndpoints> = {
     routes: {
       get: '/api/v1/routes',
       update: (id: string, routes: string[]) => ({ // enabled: boolean is substituted for the array of routes
+        url: `/api/v1/node/${id}/approve_routes`,
+        method: 'POST',
+        body: { routes }
+      }),
+    },
+
+    users: {
+      get: '/api/v1/user',
+      addUser: (name: string) => ({
+        url: `/api/v1/user`,
+        method: 'POST',
+        body: { name }
+      }),
+      deleteUser: (id: number) => ({
+        url: `/api/v1/user/${id}`,
+        method: 'DELETE',
+      }),
+      renameUser: (id: number, newName: string) => ({
+        url: `/api/v1/user/${id}/rename/${newName}`,
+        method: 'POST',
+      }),
+    },
+
+    acl: {
+      getPolicy: '/api/v1/policy',
+      updatePolicy: (policy: any) => ({
+        url: '/api/v1/policy',
+        method: 'PUT',
+        body: JSON.stringify(policy)
+      }),
+    },
+  },
+  'v0.28': {
+    // v0.28 follows v0.27 for most endpoints.
+    apikeys: {
+      get: '/api/v1/apikey',
+      createApiKey: (expiration: string) => ({
+        url: `/api/v1/apikey`,
+        method: 'POST',
+        body: { expiration }
+      }),
+      expireApiKey: (prefix: string) => ({
+        url: `/api/v1/apikey/expire`,
+        method: 'POST',
+        body: { prefix }
+      }),
+    },
+
+    devices: {
+      get: '/api/v1/node',
+      registerDevice: (user: number, key: string) => ({
+        url: `/api/v1/node/register`,
+        method: 'POST',
+        body: { user, key }
+      }),
+      renameDevice: (id: number, newName: string) => ({
+        url: `/api/v1/node/${id}/rename/${newName}`,
+        method: 'POST',
+      }),
+      deleteDevice: (id: number) => ({
+        url: `/api/v1/node/${id}`,
+        method: 'DELETE',
+      }),
+      addTags: (id: number, tags: string[]) => ({
+        url: `/api/v1/node/${id}/tags`,
+        method: 'POST',
+        body: { tags }
+      }),
+      // MoveNode was removed in v0.28. Keep endpoint shape for backward tolerance.
+      changeUser: (id: number, user: number) => ({
+        url: `/api/v1/node/${id}/user`,
+        method: 'POST',
+        body: { user }
+      }),
+    },
+
+    preauthkeys: {
+      // v0.28 lists keys globally (not filtered by user).
+      get: () => ({
+        url: `/api/v1/preauthkey`,
+        method: 'GET',
+      }),
+      createPreauthKey: (user: number, expiration: string, reusable: boolean) => ({
+        url: `/api/v1/preauthkey`,
+        method: 'POST',
+        body: { user, expiration, reusable },
+      }),
+      // v0.28 uses ID-based operations.
+      expirePreauthKey: (_user: number, keyId: string) => ({
+        url: `/api/v1/preauthkey/expire`,
+        method: 'POST',
+        body: { id: Number(keyId) },
+      }),
+    },
+
+    routes: {
+      get: '/api/v1/routes',
+      update: (id: string, routes: string[]) => ({
         url: `/api/v1/node/${id}/approve_routes`,
         method: 'POST',
         body: { routes }

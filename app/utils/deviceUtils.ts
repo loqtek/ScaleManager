@@ -1,5 +1,6 @@
 import { Clipboard } from "react-native";
 import Toast from "react-native-toast-message";
+import { getVersionKey, isV026OrHigher } from "./headscaleVersion";
 
 export const formatDate = (dateString: string | null) => {
   if (!dateString || dateString === "0001-01-01T00:00:00Z") {
@@ -57,8 +58,8 @@ export const getVersionInfo = async () => {
   if (!config) return null;
 
   const { serverConf } = config;
-  const versionKey = serverConf.version ? `v${serverConf.version.split('.').slice(0, 2).join('.')}` : 'v0.26';
-  const isV026OrHigher = versionKey >= 'v0.26';
+  const versionKey = getVersionKey(serverConf.version);
+  const isNewerApi = isV026OrHigher(serverConf.version);
   
-  return { versionKey, isV026OrHigher };
+  return { versionKey, isV026OrHigher: isNewerApi };
 };
