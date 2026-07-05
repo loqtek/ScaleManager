@@ -1,4 +1,5 @@
 import { getServerConfig } from "../utils/getServer";
+import { fetchWithFallback } from "../utils/apiUtils";
   
 export async function getAPIKeys() {
     try {
@@ -12,12 +13,8 @@ export async function getAPIKeys() {
       const server = serverConf.server;
       const authKey = serverConf.apiKey;
       
-      const response = await fetch(`${server}/api/v1/apikey`, {
+      const response = await fetchWithFallback(server, authKey, `/api/v1/apikey`, {
         method: 'GET',
-        headers: {
-          'Accept': 'application/json',
-          'Authorization': `Bearer ${authKey}`,
-        },
       });
 
       if (!response.ok) {
@@ -46,12 +43,8 @@ export async function createAPIKey(expiration: string) {
       const server = serverConf.server;
       const authKey = serverConf.apiKey;
       
-      const response = await fetch(`${server}/api/v1/apikey`, {
+      const response = await fetchWithFallback(server, authKey, `/api/v1/apikey`, {
         method: 'POST',
-        headers: {
-          'Accept': 'application/json',
-          'Authorization': `Bearer ${authKey}`,
-        },
         body: JSON.stringify({ expiration }),
       });
 
@@ -80,12 +73,8 @@ export async function expireAPIKey(prefix: string) {
       const server = serverConf.server;
       const authKey = serverConf.apiKey;
       
-      const response = await fetch(`${server}/api/v1/apikey/expire`, {
+      const response = await fetchWithFallback(server, authKey, `/api/v1/apikey/expire`, {
         method: 'POST',
-        headers: {
-          'Accept': 'application/json',
-          'Authorization': `Bearer ${authKey}`,
-        },
         body: JSON.stringify({ prefix }),
       });
 
