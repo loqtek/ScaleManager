@@ -15,7 +15,7 @@ import { MaterialIcons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { useAccountsManager, HeadscaleVersion } from "@/app/funcs/accounts";
 
-const VERSION_OPTIONS: HeadscaleVersion[] = ["0.28.x", "0.27.x", "0.26.x", "0.25.x", "0.24.x", "0.23.x"];
+const VERSION_OPTIONS: HeadscaleVersion[] = ["0.29.x", "0.28.x", "0.27.x", "0.26.x", "0.25.x", "0.24.x", "0.23.x"];
 
 export default function Accounts() {
   const {
@@ -31,7 +31,7 @@ export default function Accounts() {
   const [customName, setCustomName] = useState("");
   const [server, setServer] = useState("");
   const [apiKey, setApiKey] = useState("");
-  const [selectedVersion, setSelectedVersion] = useState<HeadscaleVersion>("0.26.x");
+  const [selectedVersion, setSelectedVersion] = useState<HeadscaleVersion>("0.29.x");
   const [showInfo, setShowInfo] = useState<string | null>(null);
   const [editingVersion, setEditingVersion] = useState<string | null>(null);
   

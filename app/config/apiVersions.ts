@@ -43,6 +43,14 @@ export interface ApiEndpoints {
   acl: {
     getPolicy: string;
     updatePolicy: (policy: any) => { url: string; method: string; body: any };
+    /** Headscale v0.29+: validate policy (incl. tests/grants) before applying */
+    checkPolicy?: (policy: string) => { url: string; method: string; body: any };
+  };
+
+  /** Headscale v0.29+: SSH check / web auth approval flow */
+  auth?: {
+    approve: (authId: string) => { url: string; method: string; body: any };
+    reject: (authId: string) => { url: string; method: string; body: any };
   };
 }
 
@@ -616,6 +624,126 @@ export const API_VERSION_MAP: Record<string, ApiEndpoints> = {
         url: '/api/v1/policy',
         method: 'PUT',
         body: JSON.stringify(policy)
+      }),
+    },
+  },
+
+  'v0.29': {
+    // v0.29 builds on v0.28 with auth routes and policy check.
+    // Device registration prefers /api/v1/auth/register { user, authId } (JSON).
+    // Policy supports grants, nodeAttrs, tests, sshTests; check before save.
+    apikeys: {
+      get: '/api/v1/apikey',
+      createApiKey: (expiration: string) => ({
+        url: `/api/v1/apikey`,
+        method: 'POST',
+        body: { expiration }
+      }),
+      expireApiKey: (prefixOrId: string | number) => ({
+        url: `/api/v1/apikey/expire`,
+        method: 'POST',
+        body: typeof prefixOrId === 'number' || /^\d+$/.test(String(prefixOrId))
+          ? { id: Number(prefixOrId) }
+          : { prefix: String(prefixOrId) }
+      }),
+    },
+
+    devices: {
+      get: '/api/v1/node',
+      // Preferred registration path on v0.29 (nodes register is deprecated).
+      registerDevice: (user: number | string, authId: string) => ({
+        url: `/api/v1/auth/register`,
+        method: 'POST',
+        body: { user: String(user), authId },
+      }),
+      renameDevice: (id: number, newName: string) => ({
+        url: `/api/v1/node/${id}/rename/${newName}`,
+        method: 'POST',
+      }),
+      deleteDevice: (id: number) => ({
+        url: `/api/v1/node/${id}`,
+        method: 'DELETE',
+      }),
+      addTags: (id: number, tags: string[]) => ({
+        url: `/api/v1/node/${id}/tags`,
+        method: 'POST',
+        body: { tags }
+      }),
+      // MoveNode removed in v0.28; kept for type compatibility.
+      changeUser: (id: number, user: number) => ({
+        url: `/api/v1/node/${id}/user`,
+        method: 'POST',
+        body: { user }
+      }),
+    },
+
+    preauthkeys: {
+      get: () => ({
+        url: `/api/v1/preauthkey`,
+        method: 'GET',
+      }),
+      createPreauthKey: (user: number, expiration: string, reusable: boolean) => ({
+        url: `/api/v1/preauthkey`,
+        method: 'POST',
+        body: { user, expiration, reusable },
+      }),
+      expirePreauthKey: (_user: number, keyId: string) => ({
+        url: `/api/v1/preauthkey/expire`,
+        method: 'POST',
+        body: { id: Number(keyId) },
+      }),
+    },
+
+    routes: {
+      get: '/api/v1/routes',
+      update: (id: string, routes: string[]) => ({
+        url: `/api/v1/node/${id}/approve_routes`,
+        method: 'POST',
+        body: { routes }
+      }),
+    },
+
+    users: {
+      get: '/api/v1/user',
+      addUser: (name: string) => ({
+        url: `/api/v1/user`,
+        method: 'POST',
+        body: { name }
+      }),
+      deleteUser: (id: number) => ({
+        url: `/api/v1/user/${id}`,
+        method: 'DELETE',
+      }),
+      renameUser: (id: number, newName: string) => ({
+        url: `/api/v1/user/${id}/rename/${newName}`,
+        method: 'POST',
+      }),
+    },
+
+    acl: {
+      getPolicy: '/api/v1/policy',
+      updatePolicy: (policy: any) => ({
+        url: '/api/v1/policy',
+        method: 'PUT',
+        body: JSON.stringify(policy)
+      }),
+      checkPolicy: (policy: string) => ({
+        url: '/api/v1/policy/check',
+        method: 'POST',
+        body: { policy },
+      }),
+    },
+
+    auth: {
+      approve: (authId: string) => ({
+        url: '/api/v1/auth/approve',
+        method: 'POST',
+        body: { authId },
+      }),
+      reject: (authId: string) => ({
+        url: '/api/v1/auth/reject',
+        method: 'POST',
+        body: { authId },
       }),
     },
   },

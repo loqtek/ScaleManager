@@ -33,6 +33,9 @@ export default function DevicesScreen() {
     setDeviceKey,
     handleModalClose,
     handleModalRegister,
+    handleModalApprove,
+    handleModalReject,
+    serverVersion,
   } = useDevices();
 
   const [searchQuery, setSearchQuery] = useState("");
@@ -288,6 +291,9 @@ export default function DevicesScreen() {
         deviceKey={deviceKey}
         onKeyChange={setDeviceKey}
         onRegister={handleModalRegister}
+        serverVersion={serverVersion}
+        onApprove={handleModalApprove}
+        onReject={handleModalReject}
       />
     </SafeAreaView>
   );

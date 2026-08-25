@@ -8,6 +8,7 @@ import { MaterialIcons } from "@expo/vector-icons";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import { useDeviceDetail } from "../funcs/deviceDetail";
 import { formatDate, getTimeAgo, copyToClipboard } from "../utils/deviceUtils";
+import { isNullExpiry } from "../utils/registrationUtils";
 import { InfoRow } from "../components/InfoRow";
 import { UserSelectionModal } from "../components/UserSelectionModal";
 import { TagsModal } from "../components/TagsModal";
@@ -41,6 +42,7 @@ export default function DeviceDetailScreen() {
     handleApproveRoutes,
     handleRemoveRoute,
     handleDelete,
+    canChangeUser,
   } = useDeviceDetail(deviceData);
   const appliedTags = device?.tags || device?.validTags || [];
 
@@ -201,12 +203,17 @@ export default function DeviceDetailScreen() {
             )}
             
             <InfoRow label="Device ID" value={device.id} copyable />
+            {device.name && device.givenName && device.name !== device.givenName && (
+              <InfoRow label="Hostname" value={device.name} />
+            )}
             <InfoRow label="IP Address" value={device.ipAddresses?.join(", ") || "N/A"} copyable />
             <InfoRow label="Last Seen" value={`${formatDate(device.lastSeen)} (${getTimeAgo(device.lastSeen)})`} />
             <InfoRow label="Created" value={formatDate(device.createdAt)} />
-            <InfoRow label="Registration Method" value={device.registerMethod.replace('REGISTER_METHOD_', '').replace('_', ' ')} />
-            {device.expiry && device.expiry !== "0001-01-01T00:00:00Z" && (
-              <InfoRow label="Expires" value={formatDate(device.expiry)} />
+            <InfoRow label="Registration Method" value={device.registerMethod?.replace('REGISTER_METHOD_', '').replace('_', ' ') || "Unknown"} />
+            {!isNullExpiry(device.expiry) ? (
+              <InfoRow label="Expires" value={formatDate(device.expiry!)} />
+            ) : (
+              <InfoRow label="Expires" value="Never" />
             )}
           </View>
 
@@ -214,9 +221,13 @@ export default function DeviceDetailScreen() {
           <View className="bg-zinc-800 rounded-xl p-4 mb-4 border border-zinc-700">
             <View className="flex-row justify-between items-center mb-4">
               <Text className="text-white text-lg font-semibold">User Assignment</Text>
-              <TouchableOpacity onPress={() => setShowUserModal(true)} className="bg-blue-600 px-3 py-1 rounded">
-                <Text className="text-white text-sm">Change</Text>
-              </TouchableOpacity>
+              {canChangeUser ? (
+                <TouchableOpacity onPress={() => setShowUserModal(true)} className="bg-blue-600 px-3 py-1 rounded">
+                  <Text className="text-white text-sm">Change</Text>
+                </TouchableOpacity>
+              ) : (
+                <Text className="text-slate-500 text-xs">Fixed at registration (v0.28+)</Text>
+              )}
             </View>
             
             <InfoRow label="User Name" value={device.user?.name || "Unknown"} />

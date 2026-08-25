@@ -18,6 +18,7 @@ export function useDeviceDetail(deviceData: string | undefined) {
   const [showRoutesModal, setShowRoutesModal] = useState(false);
   const [selectedRoutes, setSelectedRoutes] = useState<string[]>([]);
   const [newTags, setNewTags] = useState("");
+  const [canChangeUser, setCanChangeUser] = useState(true);
 
   useEffect(() => {
     if (deviceData) {
@@ -25,6 +26,12 @@ export function useDeviceDetail(deviceData: string | undefined) {
         const parsedDevice: Device = JSON.parse(deviceData);
         setDevice(parsedDevice);
         loadUsers();
+        (async () => {
+          const versionInfo = await getVersionInfo();
+          if (versionInfo?.versionKey) {
+            setCanChangeUser(!isV028OrHigher(versionInfo.versionKey.replace(/^v/, "")));
+          }
+        })();
       } catch (error) {
         console.error("Failed to parse device data:", error);
         Toast.show({
@@ -386,5 +393,6 @@ export function useDeviceDetail(deviceData: string | undefined) {
     handleApproveRoutes,
     handleRemoveRoute,
     handleDelete,
+    canChangeUser,
   };
 }

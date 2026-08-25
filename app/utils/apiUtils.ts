@@ -103,8 +103,8 @@ export async function getApiEndpoints(): Promise<{ endpoints: ApiEndpoints; serv
 
   const endpoints = API_VERSION_MAP[versionKey];
   if (!endpoints) {
-    console.warn(`No API endpoints found for version ${versionKey}, using default v0.26`);
-    return { endpoints: API_VERSION_MAP['v0.26'], serverConf };
+    console.warn(`No API endpoints found for version ${versionKey}, using default v0.29`);
+    return { endpoints: API_VERSION_MAP['v0.29'], serverConf };
   }
 
   return { endpoints, serverConf };

@@ -39,6 +39,7 @@ export default function ACLScreen() {
     setShowVersions,
     setShowSetupGuide,
     setEditText,
+    serverVersion,
   } = useACL();
 
   return (
@@ -54,6 +55,11 @@ export default function ACLScreen() {
             <View className="flex-1">
               <Text className="text-white text-2xl font-bold">ACL Policy</Text>
               <Text className="text-slate-400 text-sm">Access Control List Management</Text>
+              {serverVersion?.startsWith("0.29") && (
+                <Text className="text-slate-500 text-xs mt-1">
+                  v0.29: supports grants, nodeAttrs, tests & sshTests. Policy is checked before save.
+                </Text>
+              )}
             </View>
 
             <View className="flex-row gap-2">

@@ -1,5 +1,5 @@
 import { getApiEndpoints, makeApiRequest } from "../utils/apiUtils";
-import { isV026OrHigher } from "../utils/headscaleVersion";
+import { isV026OrHigher, isV029OrHigher } from "../utils/headscaleVersion";
 
 export async function getDevices() {
   const config = await getApiEndpoints();
@@ -9,15 +9,27 @@ export async function getDevices() {
   return await makeApiRequest(endpoints.devices.get, { method: 'GET' });
 }
 
-export async function registerDevice(user: string | number, key: string) {
+/**
+ * Register a device.
+ * - v0.29+: POST /api/v1/auth/register with { user, authId }
+ * - older:  POST /api/v1/node/register with { user, key }
+ */
+export async function registerDevice(user: string | number, keyOrAuthId: string) {
   const config = await getApiEndpoints();
   if (!config) return null;
-  const { endpoints } = config;
-  const apiCall = endpoints.devices.registerDevice(user as number, key);
-  
+  const { endpoints, serverConf } = config;
+  const apiCall = endpoints.devices.registerDevice(user as number, keyOrAuthId);
+
+  // Ensure JSON body is always sent (required for v0.29 auth/register).
+  const body = apiCall.body
+    ? apiCall.body
+    : isV029OrHigher(serverConf.version)
+      ? { user: String(user), authId: keyOrAuthId }
+      : { user, key: keyOrAuthId };
+
   return await makeApiRequest(apiCall.url, {
     method: apiCall.method,
-    body: apiCall.body ? JSON.stringify(apiCall.body) : undefined,
+    body: JSON.stringify(body),
   });
 }
 

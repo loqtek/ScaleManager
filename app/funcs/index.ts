@@ -6,7 +6,7 @@ import { testAPIKeyDetailed } from "../api/login";
 import { normalizeApiKey } from "../utils/apiKeyUtils";
 import { parseVersion } from "../utils/getServer";
 
-export type HeadscaleVersion = "0.23.x" | "0.24.x" | "0.25.x" | "0.26.x" | "0.27.x" | "0.28.x";
+export type HeadscaleVersion = "0.23.x" | "0.24.x" | "0.25.x" | "0.26.x" | "0.27.x" | "0.28.x" | "0.29.x";
 
 export function useLogin() {
   const router = useRouter();
@@ -14,7 +14,7 @@ export function useLogin() {
   const [customName, setCustomName] = useState("");
   const [server, setServer] = useState("");
   const [apiKey, setApiKey] = useState("");
-  const [headscaleVersion, setHeadscaleVersion] = useState<HeadscaleVersion>("0.26.x");
+  const [headscaleVersion, setHeadscaleVersion] = useState<HeadscaleVersion>("0.29.x");
   const [showInfo, setShowInfo] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 

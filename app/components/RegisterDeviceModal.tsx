@@ -12,6 +12,7 @@ import {
   Keyboard,
 } from "react-native";
 import Toast from "react-native-toast-message";
+import { isV029OrHigher } from "../utils/headscaleVersion";
 
 interface RegisterDeviceModalProps {
   visible: boolean;
@@ -22,6 +23,9 @@ interface RegisterDeviceModalProps {
   deviceKey: string;
   onKeyChange: (key: string) => void;
   onRegister: () => void;
+  serverVersion?: string;
+  onApprove?: () => void;
+  onReject?: () => void;
 }
 
 export const RegisterDeviceModal: React.FC<RegisterDeviceModalProps> = ({
@@ -33,9 +37,14 @@ export const RegisterDeviceModal: React.FC<RegisterDeviceModalProps> = ({
   deviceKey,
   onKeyChange,
   onRegister,
+  serverVersion,
+  onApprove,
+  onReject,
 }) => {
+  const isV029 = isV029OrHigher(serverVersion);
+
   const handleRegister = () => {
-    if (!selectedUser) {
+    if (!selectedUser && !/headscale\s+auth\s+(approve|reject)/i.test(deviceKey)) {
       Toast.show({
         type: "error",
         position: "top",
@@ -48,8 +57,10 @@ export const RegisterDeviceModal: React.FC<RegisterDeviceModalProps> = ({
       Toast.show({
         type: "error",
         position: "top",
-        text1: "⚠️ No Key",
-        text2: "Please enter a device key",
+        text1: isV029 ? "⚠️ No Auth ID" : "⚠️ No Key",
+        text2: isV029
+          ? "Enter an auth ID or paste a headscale auth command"
+          : "Please enter a device key",
       });
       return;
     }
@@ -70,9 +81,16 @@ export const RegisterDeviceModal: React.FC<RegisterDeviceModalProps> = ({
             className="w-full max-w-md"
           >
             <View className="bg-zinc-800 rounded-xl p-6">
-              <Text className="text-white text-xl font-bold mb-4 text-center">
-                Register Device
+              <Text className="text-white text-xl font-bold mb-2 text-center">
+                {isV029 ? "Register / Auth" : "Register Device"}
               </Text>
+              {isV029 && (
+                <Text className="text-slate-400 text-xs text-center mb-4">
+                  v0.29 uses auth IDs. Paste an auth ID or a full{" "}
+                  <Text className="text-slate-200 font-mono">headscale auth …</Text>{" "}
+                  command.
+                </Text>
+              )}
 
               {/* User Selection */}
               <Text className="text-slate-300 text-sm mb-2">Select User:</Text>
@@ -120,11 +138,17 @@ export const RegisterDeviceModal: React.FC<RegisterDeviceModalProps> = ({
                 </View>
               )}
 
-              {/* Key Input */}
-              <Text className="text-slate-300 text-sm mb-2">Device Key:</Text>
+              {/* Key / Auth ID Input */}
+              <Text className="text-slate-300 text-sm mb-2">
+                {isV029 ? "Auth ID or command:" : "Device Key:"}
+              </Text>
               <TextInput
-                className="bg-zinc-700 text-white p-3 rounded-lg mb-4"
-                placeholder="Enter pre-auth key or full headscale command"
+                className="bg-zinc-700 text-white p-3 rounded-lg mb-2"
+                placeholder={
+                  isV029
+                    ? "auth-id or: headscale auth register --user … --auth-id …"
+                    : "Enter key or full headscale nodes register command"
+                }
                 placeholderTextColor="#94a3b8"
                 value={deviceKey}
                 onChangeText={onKeyChange}
@@ -132,9 +156,17 @@ export const RegisterDeviceModal: React.FC<RegisterDeviceModalProps> = ({
                 autoCapitalize="none"
                 autoCorrect={false}
               />
+              {isV029 && (
+                <Text className="text-slate-500 text-xs mb-4">
+                  Examples:{"\n"}
+                  headscale auth register --user alice --auth-id …{"\n"}
+                  headscale auth approve --auth-id …{"\n"}
+                  headscale auth reject --auth-id …
+                </Text>
+              )}
 
               {/* Buttons */}
-              <View className="flex-row space-x-3">
+              <View className="flex-row space-x-3 mb-3">
                 <TouchableOpacity
                   onPress={onClose}
                   className="flex-1 bg-zinc-600 py-3 rounded-lg"
@@ -153,6 +185,27 @@ export const RegisterDeviceModal: React.FC<RegisterDeviceModalProps> = ({
                   </Text>
                 </TouchableOpacity>
               </View>
+
+              {isV029 && onApprove && onReject && (
+                <View className="flex-row space-x-3">
+                  <TouchableOpacity
+                    onPress={onApprove}
+                    className="flex-1 bg-green-700 py-3 rounded-lg"
+                  >
+                    <Text className="text-white text-center font-medium">
+                      Approve
+                    </Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    onPress={onReject}
+                    className="flex-1 bg-red-700 py-3 rounded-lg"
+                  >
+                    <Text className="text-white text-center font-medium">
+                      Reject
+                    </Text>
+                  </TouchableOpacity>
+                </View>
+              )}
             </View>
           </KeyboardAvoidingView>
         </View>
@@ -160,4 +213,3 @@ export const RegisterDeviceModal: React.FC<RegisterDeviceModalProps> = ({
     </Modal>
   );
 };
-
