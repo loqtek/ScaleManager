@@ -22,7 +22,7 @@ export async function updateACLPolicy(policy: any) {
     const config = await getApiEndpoints();
     if (!config) return null;
 
-    const { endpoints, serverConf } = config;
+    const { endpoints } = config;
     
     const policyString = typeof policy === 'string' ? policy : JSON.stringify(policy);
     
@@ -36,7 +36,6 @@ export async function updateACLPolicy(policy: any) {
       method: 'PUT',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${serverConf.apiKey}`,
       },
       body: requestBody,
     });

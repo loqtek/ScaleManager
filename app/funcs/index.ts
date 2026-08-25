@@ -2,7 +2,8 @@ import { useState } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useRouter } from "expo-router";
 import Toast from "react-native-toast-message";
-import { testAPIKey } from "../api/login";
+import { testAPIKeyDetailed } from "../api/login";
+import { normalizeApiKey } from "../utils/apiKeyUtils";
 import { parseVersion } from "../utils/getServer";
 
 export type HeadscaleVersion = "0.23.x" | "0.24.x" | "0.25.x" | "0.26.x" | "0.27.x" | "0.28.x";
@@ -33,16 +34,16 @@ export function useLogin() {
     }
 
     const servers = JSON.parse(serversJson);
-    const selected = servers.find(s => s.name === selectedName);
+    const selected = servers.find((s: { name: string }) => s.name === selectedName);
 
     if (!selected) {
       setLoading(false);
       return;
     }
 
-    const isValid = await testAPIKey(selected.server, selected.apiKey);
+    const result = await testAPIKeyDetailed(selected.server, selected.apiKey);
 
-    if (isValid) {
+    if (result.ok) {
       Toast.show({
         type: "success",
         position: "top",
@@ -77,20 +78,25 @@ export function useLogin() {
       return;
     }
     
-    let isValid = false
+    const normalizedKey = normalizeApiKey(apiKey);
+
+    let authResult: Awaited<ReturnType<typeof testAPIKeyDetailed>>;
     // temp for apple login demo, will do nothing
-    if (server === "https://appledemo.login.ieouiudhmpac.com" && apiKey === "WlEB2D3t4fdash89LQW65KDsaD9oq0d2npso78uJolmOod2jp7"){
-      isValid = true
+    if (
+      server === "https://appledemo.login.ieouiudhmpac.com" &&
+      normalizedKey === "WlEB2D3t4fdash89LQW65KDsaD9oq0d2npso78uJolmOod2jp7"
+    ) {
+      authResult = { ok: true };
     } else {
-      isValid = await testAPIKey(server, apiKey);
+      authResult = await testAPIKeyDetailed(server, normalizedKey);
     }
 
-    if (!isValid) {
+    if (!authResult.ok) {
       Toast.show({
         type: "error",
         position: "top",
-        text1: "⚠️ Invalid API Key",
-        text2: "Check your API key and try again.",
+        text1: "⚠️ Connection Failed",
+        text2: authResult.message || "Check your API key and try again.",
       });
       return;
     }
@@ -104,7 +110,7 @@ export function useLogin() {
     const newEntry = {
       name: customName.trim(),
       server: server.trim(),
-      apiKey: apiKey.trim(),
+      apiKey: normalizedKey,
       addedOn: new Date().toISOString(),
       version: parseVersion(headscaleVersion)
     };
@@ -120,7 +126,7 @@ export function useLogin() {
     }
 
     const updated = [
-      ...parsed.filter((item) => item.name !== newEntry.name),
+      ...parsed.filter((item: { name: string }) => item.name !== newEntry.name),
       newEntry,
     ];
 

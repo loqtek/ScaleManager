@@ -185,9 +185,12 @@ export default function LoginScreen() {
                 autoCorrect={false}
               />
               <InfoText field="key">
-                Generate an API key using Headscale's CLI command: {"\n"}
-                <Text className="text-slate-100 font-mono">headscale apikey create --expiration 90d</Text>
-                {"\n\n"}The API key provides secure access to your Headscale server's management functions.
+                Generate a management API key (not a pre-auth key):{"\n"}
+                <Text className="text-slate-100 font-mono">headscale apikeys create --expiration 90d</Text>
+                {"\n\n"}
+                Headscale v0.28+ keys look like{" "}
+                <Text className="text-slate-100 font-mono">hskey-api-…</Text>
+                . Pre-auth keys (<Text className="text-slate-100 font-mono">hskey-auth-…</Text>) cannot log in.
               </InfoText>
             </View>
 

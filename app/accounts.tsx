@@ -288,8 +288,10 @@ export default function Accounts() {
                   autoCorrect={false}
                 />
                 <InfoText field="key">
-                  Generate with: {'\n'}
-                  <Text className="text-slate-100 font-mono">headscale apikey create --expiration 90d</Text>
+                  Generate a management API key (not a pre-auth key):{"\n"}
+                  <Text className="text-slate-100 font-mono">headscale apikeys create --expiration 90d</Text>
+                  {"\n"}
+                  v0.28+ format: <Text className="text-slate-100 font-mono">hskey-api-…</Text>
                 </InfoText>
               </View>
 

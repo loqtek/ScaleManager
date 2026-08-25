@@ -1,5 +1,6 @@
 import { getServerConfig } from "../utils/getServer";
 import { API_VERSION_MAP, ApiEndpoints } from "../config/apiVersions";
+import { normalizeApiKey } from "./apiKeyUtils";
 import { getVersionKey } from "./headscaleVersion";
 
 // Headscale's REST API uses singular resource names (e.g. /api/v1/node), but
@@ -57,14 +58,18 @@ export async function fetchWithFallback(
   const candidates = buildEndpointCandidates(path);
   let lastResponse: Response | null = null;
 
+  const token = normalizeApiKey(apiKey);
+
   for (const candidate of candidates) {
     const response = await fetch(`${server}${candidate}`, {
       ...options,
       headers: {
         Accept: "application/json",
-        Authorization: `Bearer ${apiKey}`,
         "Content-Type": "application/json",
         ...options.headers,
+        // Always win over caller headers so we never drop the Bearer scheme
+        // required by Headscale (missing "Bearer " is logged as an auth error).
+        Authorization: `Bearer ${token}`,
       },
     });
 

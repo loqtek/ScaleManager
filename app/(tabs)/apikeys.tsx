@@ -259,7 +259,7 @@ export default function ApiKeysScreen() {
                             {
                               text: "Expire Key",
                               style: "destructive",
-                              onPress: () => handleExpireKey(key.prefix),
+                              onPress: () => handleExpireKey({ id: key.id, prefix: key.prefix }),
                             },
                           ]
                         );

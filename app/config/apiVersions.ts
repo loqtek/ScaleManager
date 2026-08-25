@@ -519,6 +519,8 @@ export const API_VERSION_MAP: Record<string, ApiEndpoints> = {
   },
   'v0.28': {
     // v0.28 follows v0.27 for most endpoints.
+    // API keys use format hskey-api-{prefix}-{secret}; list returns masked prefixes.
+    // Expire/delete accept id (preferred) or prefix — see app/api/apikeys.ts.
     apikeys: {
       get: '/api/v1/apikey',
       createApiKey: (expiration: string) => ({
@@ -526,10 +528,12 @@ export const API_VERSION_MAP: Record<string, ApiEndpoints> = {
         method: 'POST',
         body: { expiration }
       }),
-      expireApiKey: (prefix: string) => ({
+      expireApiKey: (prefixOrId: string | number) => ({
         url: `/api/v1/apikey/expire`,
         method: 'POST',
-        body: { prefix }
+        body: typeof prefixOrId === 'number' || /^\d+$/.test(String(prefixOrId))
+          ? { id: Number(prefixOrId) }
+          : { prefix: String(prefixOrId) }
       }),
     },
 
