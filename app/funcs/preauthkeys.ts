@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { getPreAuthKeys, createPreAuthKey, expirePreAuthKey } from "../api/preauthkeys";
 import { getUsers } from "../api/users";
-import { getApiEndpoints } from "../utils/apiUtils";
+import { getApiEndpoints, isApiSuccess } from "../utils/apiUtils";
 import { isV026OrHigher, isV028OrHigher } from "../utils/headscaleVersion";
 import Toast from "react-native-toast-message";
 import { calculateExpirationDate } from "../utils/time";
@@ -105,7 +105,7 @@ export const usePreAuthManager = () => {
     
     const result = await expirePreAuthKey(userIdentifier, keyId, apiVersion);
     
-    if (result) {
+    if (isApiSuccess(result)) {
       Toast.show({
         type: "success",
         position: "top",
@@ -168,7 +168,7 @@ export const usePreAuthManager = () => {
     
     const result = await createPreAuthKey(userIdentifier, expirationDate, reusable);
     
-    if (result) {
+    if (isApiSuccess(result)) {
       Toast.show({
         type: "success",
         position: "top",

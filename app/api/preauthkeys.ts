@@ -1,4 +1,4 @@
-import { getApiEndpoints, makeApiRequest } from "../utils/apiUtils";
+import { getApiEndpoints, makeApiRequest, isApiSuccess } from "../utils/apiUtils";
 import { isV028OrHigher } from "../utils/headscaleVersion";
 
 export async function getPreAuthKeys(userIdentifier?: string) {
@@ -20,10 +20,22 @@ export async function createPreAuthKey(userIdentifier: string | number, expirati
   const { endpoints } = config;
   
   const apiCall = endpoints.preauthkeys.createPreauthKey(userIdentifier, expiration, reusable);
-  
+  const rawUser = apiCall.body.user;
+  const userValue =
+    typeof rawUser === "number"
+      ? rawUser
+      : /^\d+$/.test(String(rawUser))
+        ? Number(rawUser)
+        : rawUser;
+
+  const body = {
+    ...apiCall.body,
+    user: userValue,
+  };
+
   return await makeApiRequest(apiCall.url, {
     method: apiCall.method,
-    body: JSON.stringify(apiCall.body),
+    body: JSON.stringify(body),
   });
 }
 

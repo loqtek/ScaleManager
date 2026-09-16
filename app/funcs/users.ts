@@ -3,7 +3,7 @@ import { Alert } from "react-native";
 import Toast from "react-native-toast-message";
 import { getUsers, addUser, deleteUser, renameUser } from "../api/users";
 import { getDevices } from "../api/devices";
-import { getApiEndpoints } from "../utils/apiUtils";
+import { getApiEndpoints, isApiSuccess } from "../utils/apiUtils";
 import { isV026OrHigher } from "../utils/headscaleVersion";
 
 export function useUsers() {
@@ -98,7 +98,7 @@ export function useUsers() {
 
             try {
               const response = await addUser(trimmed);
-              if (response) {
+              if (isApiSuccess(response)) {
                 await fetchUsers(); // refresh list
                 Toast.show({
                   type: "success",
@@ -177,7 +177,7 @@ export function useUsers() {
               
               // Use user ID for v0.26+ or name for older versions
               const response = await renameUser(useNumericIds ? id : name, newName.trim());
-              if (response) {
+              if (isApiSuccess(response)) {
                 // Update local state immediately for better UX
                 setUsers((prev) =>
                   prev.map((user) =>
@@ -235,7 +235,7 @@ export function useUsers() {
       
       // Use user ID for v0.26+ or name for older versions
       const response = await deleteUser(useNumericIds ? userId : userName);
-      if (response) {
+      if (isApiSuccess(response)) {
         // Remove from local state immediately
         setUsers((prev) => prev.filter((user) => user.id !== userId));
 
@@ -253,7 +253,11 @@ export function useUsers() {
           type: "error",
           position: "top",
           text1: "⚠️ Delete Failed",
-          text2: `Failed to delete user "${userName}".`,
+          text2: `Failed to delete user "${userName}".${
+          response && typeof response === "object" && "message" in response
+            ? ` ${(response as { message?: string }).message}`
+            : ""
+        }`,
         });
       }
     } catch (error) {

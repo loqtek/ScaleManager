@@ -110,6 +110,16 @@ export async function getApiEndpoints(): Promise<{ endpoints: ApiEndpoints; serv
   return { endpoints, serverConf };
 }
 
+/** True when makeApiRequest / fetchWithFallback returned a successful result. */
+export function isApiSuccess(result: unknown): boolean {
+  if (result === null || result === undefined) return false;
+  if (typeof result !== "object") return true;
+  const r = result as Record<string, unknown>;
+  if (r.error === true) return false;
+  if (typeof r.code === "number" && r.code >= 400) return false;
+  return true;
+}
+
 // Helper function to make API requests
 export async function makeApiRequest(url: string, options: RequestInit = {}) {
   const config = await getApiEndpoints();
@@ -139,8 +149,10 @@ export async function makeApiRequest(url: string, options: RequestInit = {}) {
       }
     }
 
-    const data = await response.json();
-    return data;
+    const text = await response.text();
+    // Some endpoints (e.g. DELETE user) return 200 with an empty body.
+    if (!text) return {};
+    return JSON.parse(text);
   } catch (error) {
     console.error("Fetch error:", error);
     return null;

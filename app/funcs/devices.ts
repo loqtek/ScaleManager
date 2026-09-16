@@ -4,8 +4,8 @@ import { approveAuth, rejectAuth } from "../api/auth";
 import { getUsers } from "../api/users";
 import Toast from "react-native-toast-message";
 import { useRouter } from "expo-router";
-import { getApiEndpoints } from "../utils/apiUtils";
-import { isV026OrHigher, isV029OrHigher } from "../utils/headscaleVersion";
+import { getApiEndpoints, isApiSuccess } from "../utils/apiUtils";
+import { isV029OrHigher } from "../utils/headscaleVersion";
 import { parseRegistrationInput } from "../utils/registrationUtils";
 import { Device } from "../types";
 
@@ -125,8 +125,7 @@ export function useDevices() {
     });
   };
 
-  const registrationFailed = (result: any) =>
-    !result || result.error || (result.code !== undefined && result.code >= 400);
+  const registrationFailed = (result: unknown) => !isApiSuccess(result);
 
   const confirmAndRegister = async (user: any, keyOrAuthId: string) => {
     try {
@@ -142,9 +141,8 @@ export function useDevices() {
       }
 
       const { serverConf } = config;
-      const useNumericIds = isV026OrHigher(serverConf.version);
-      const userParam = useNumericIds ? user.id : user.name;
-      const result = await registerDevice(userParam, keyOrAuthId);
+      // Headscale RegisterNode resolves user by name, not numeric ID.
+      const result = await registerDevice(user.name, keyOrAuthId);
 
       if (!registrationFailed(result)) {
         Toast.show({

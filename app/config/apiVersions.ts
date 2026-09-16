@@ -7,7 +7,7 @@ export interface ApiEndpoints {
 
   devices: {
     get: string;
-    registerDevice: (user: number, key: string) => { url: string; method: string; body?: any };
+    registerDevice: (user: string | number, key: string) => { url: string; method: string; body?: any };
     renameDevice: (id: number, newName: string) => { url: string; method: string };
     deleteDevice: (id: number) => { url: string; method: string };
     addTags: (id: number, tags: string[]) => { url: string; method: string; body?: any };

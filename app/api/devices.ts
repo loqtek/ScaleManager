@@ -11,25 +11,35 @@ export async function getDevices() {
 
 /**
  * Register a device.
- * - v0.29+: POST /api/v1/auth/register with { user, authId }
- * - older:  POST /api/v1/node/register with { user, key }
+ * - v0.29+: POST /api/v1/auth/register JSON { user, authId }  (user = username)
+ * - v0.28-: POST /api/v1/node/register?user=<name>&key=<id>  (query params, not JSON body)
+ *
+ * Headscale looks up the user by *name* (GetUserByName), not numeric ID.
  */
 export async function registerDevice(user: string | number, keyOrAuthId: string) {
   const config = await getApiEndpoints();
   if (!config) return null;
   const { endpoints, serverConf } = config;
-  const apiCall = endpoints.devices.registerDevice(user as number, keyOrAuthId);
 
-  // Ensure JSON body is always sent (required for v0.29 auth/register).
-  const body = apiCall.body
-    ? apiCall.body
-    : isV029OrHigher(serverConf.version)
-      ? { user: String(user), authId: keyOrAuthId }
-      : { user, key: keyOrAuthId };
+  // Always pass username — Headscale RegisterNode uses GetUserByName().
+  const userName = String(user);
 
-  return await makeApiRequest(apiCall.url, {
-    method: apiCall.method,
-    body: JSON.stringify(body),
+  if (isV029OrHigher(serverConf.version)) {
+    const apiCall = endpoints.devices.registerDevice(userName, keyOrAuthId);
+    return await makeApiRequest(apiCall.url, {
+      method: apiCall.method,
+      body: JSON.stringify(apiCall.body ?? { user: userName, authId: keyOrAuthId }),
+    });
+  }
+
+  // v0.28 and older: grpc-gateway binds RegisterNode fields as query parameters.
+  const params = new URLSearchParams({
+    user: userName,
+    key: keyOrAuthId,
+  });
+
+  return await makeApiRequest(`/api/v1/node/register?${params.toString()}`, {
+    method: 'POST',
   });
 }
 
@@ -39,10 +49,8 @@ export async function renameDevice(idOrName: string | number, newName: string) {
 
   const { endpoints, serverConf } = config;
   
-  // Check if we're using v0.26 or higher (which uses integer IDs)
   const usesNumericIds = isV026OrHigher(serverConf.version);
   
-  // Convert to appropriate type based on version
   const deviceId = usesNumericIds ? Number(idOrName) : idOrName;
   const apiCall = endpoints.devices.renameDevice(deviceId as number, newName);
   
@@ -57,10 +65,8 @@ export async function deleteDevice(id: string) {
 
   const { endpoints, serverConf } = config;
   
-  // Check if we're using v0.26 or higher (which uses integer IDs)
   const usesNumericIds = isV026OrHigher(serverConf.version);
   
-  // Convert to appropriate type based on version
   const deviceId = usesNumericIds ? Number(id) : id;
   const apiCall = endpoints.devices.deleteDevice(deviceId as number);
   
@@ -75,13 +81,10 @@ export async function addTags(idOrName: string | number, tags: string[]) {
 
   const { endpoints, serverConf } = config;
   
-  // Check if we're using v0.26 or higher (which uses integer IDs)
   const usesNumericIds = isV026OrHigher(serverConf.version);
   
-  // Convert to appropriate type based on version
   const deviceId = usesNumericIds ? Number(idOrName) : idOrName;
   
-  // Format tags with "tag:" prefix and normalize
   const formattedTags = tags.map(tag => `tag:${tag.trim().toLowerCase()}`);
   const apiCall = endpoints.devices.addTags(deviceId as number, formattedTags);
   
@@ -92,7 +95,6 @@ export async function addTags(idOrName: string | number, tags: string[]) {
 }
 
 export async function removeTags(id: string, tags: string[]) {
-  // TODO: Implement when API endpoint is available
   console.warn("removeTags not yet implemented - API endpoint needed");
   return null;
 }
@@ -103,10 +105,8 @@ export async function changeUser(idOrName: number, user: any) {
 
   const { endpoints, serverConf } = config;
   
-  // Check if we're using v0.26 or higher (which uses integer IDs)
   const usesNumericIds = isV026OrHigher(serverConf.version);
   
-  // Convert to appropriate types based on version
   const deviceId = usesNumericIds ? Number(idOrName) : idOrName;
   const userId = usesNumericIds ? Number(user.id) : user.name;
   const apiCall = endpoints.devices.changeUser(deviceId as number, userId);
