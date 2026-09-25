@@ -28,33 +28,56 @@ export function useLogin() {
     const selectedName = await AsyncStorage.getItem("selectedServer");
     const serversJson = await AsyncStorage.getItem("servers");
 
-    if (!selectedName || !serversJson) {
+    if (!serversJson) {
       setLoading(false);
       return;
     }
 
-    const servers = JSON.parse(serversJson);
-    const selected = servers.find((s: { name: string }) => s.name === selectedName);
-
-    if (!selected) {
+    let servers: { name: string; server: string; apiKey: string }[] = [];
+    try {
+      servers = JSON.parse(serversJson);
+    } catch (e) {
+      console.warn("Failed to parse saved servers:", e);
       setLoading(false);
       return;
     }
 
-    const result = await testAPIKeyDetailed(selected.server, selected.apiKey);
+    if (!Array.isArray(servers) || servers.length === 0) {
+      setLoading(false);
+      return;
+    }
 
-    if (result.ok) {
+    // Try the selected server first, then the rest of the saved list.
+    const ordered = selectedName
+      ? [
+          ...servers.filter((s) => s.name === selectedName),
+          ...servers.filter((s) => s.name !== selectedName),
+        ]
+      : servers;
+
+    for (const candidate of ordered) {
+      const result = await testAPIKeyDetailed(candidate.server, candidate.apiKey);
+      if (!result.ok) continue;
+
+      const fellBack = Boolean(selectedName) && candidate.name !== selectedName;
+      if (candidate.name !== selectedName) {
+        await AsyncStorage.setItem("selectedServer", candidate.name);
+      }
+
       Toast.show({
-        type: "success",
+        type: fellBack ? "info" : "success",
         position: "top",
-        text1: "✅ Connected",
-        text2: `Connected to ${selected.name}.`,
+        text1: fellBack ? "Switched server" : "✅ Connected",
+        text2: fellBack
+          ? `"${selectedName}" failed the connection test. Connected to ${candidate.name}.`
+          : `Connected to ${candidate.name}.`,
       });
       setLoading(false);
       router.push("/(tabs)");
-    } else {
-      setLoading(false);
+      return;
     }
+
+    setLoading(false);
   };
 
   const handleLogin = async () => {
