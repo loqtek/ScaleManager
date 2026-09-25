@@ -12,6 +12,7 @@ import {
 } from "react-native";
 import { MaterialIcons } from "@expo/vector-icons";
 import { useLogin, HeadscaleVersion } from "@/app/funcs/index";
+import { HttpInsecureWarning } from "@/app/components/HttpInsecureWarning";
 
 const VERSION_OPTIONS: HeadscaleVersion[] = ["0.29.x", "0.28.x", "0.27.x", "0.26.x", "0.25.x", "0.24.x", "0.23.x"];
 
@@ -30,6 +31,7 @@ export default function LoginScreen() {
     loading,
     checkForPreviousKey,
     handleLogin,
+    httpRisk,
   } = useLogin();
 
   useEffect(() => {
@@ -163,6 +165,12 @@ export default function LoginScreen() {
               <InfoText field="server">
                 Enter your Headscale server's full URL including http:// or https://. The server must be accessible from your device over the internet or local network.
               </InfoText>
+              <HttpInsecureWarning
+                insecure={httpRisk.insecure}
+                acknowledged={httpRisk.acknowledged}
+                secondsLeft={httpRisk.secondsLeft}
+                onToggle={httpRisk.toggleAcknowledged}
+              />
             </View>
 
             {/* Version Selector */}
@@ -196,8 +204,11 @@ export default function LoginScreen() {
 
             {/* Login Button */}
             <TouchableOpacity
-              className="bg-blue-600 py-3 rounded-xl shadow-lg"
+              className={`py-3 rounded-xl shadow-lg ${
+                httpRisk.canProceed ? "bg-blue-600" : "bg-zinc-600"
+              }`}
               onPress={handleLogin}
+              disabled={!httpRisk.canProceed}
               activeOpacity={0.8}
             >
               <Text className="text-white text-center font-bold text-lg">

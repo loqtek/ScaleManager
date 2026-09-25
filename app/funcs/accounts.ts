@@ -5,6 +5,7 @@ import Toast from "react-native-toast-message";
 import { testAPIKeyDetailed } from "../api/login";
 import { normalizeApiKey } from "../utils/apiKeyUtils";
 import { parseVersion } from "../utils/getServer";
+import { isInsecureHttpUrl } from "../components/HttpInsecureWarning";
 
 export type HeadscaleVersion = "0.23.x" | "0.24.x" | "0.25.x" | "0.26.x" | "0.27.x" | "0.28.x" | "0.29.x";
 
@@ -21,6 +22,7 @@ interface AddAccountParams {
   server: string;
   apiKey: string;
   version: HeadscaleVersion;
+  httpRiskAcknowledged?: boolean;
   onSuccess?: () => void;
   onFail?: () => void;
 }
@@ -87,6 +89,7 @@ export function useAccountsManager() {
     server,
     apiKey,
     version,
+    httpRiskAcknowledged = false,
     onSuccess,
     onFail,
   }: AddAccountParams) => {
@@ -107,6 +110,17 @@ export function useAccountsManager() {
         position: "top",
         text1: "⚠️ Invalid Server URL",
         text2: "Must start with http:// or https://",
+      });
+      if (onFail) onFail();
+      return;
+    }
+
+    if (isInsecureHttpUrl(server) && !httpRiskAcknowledged) {
+      Toast.show({
+        type: "error",
+        position: "top",
+        text1: "HTTP confirmation required",
+        text2: "Confirm you understand the risk before sending your API token over HTTP.",
       });
       if (onFail) onFail();
       return;

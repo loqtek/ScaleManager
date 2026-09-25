@@ -14,6 +14,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { MaterialIcons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { useAccountsManager, HeadscaleVersion } from "@/app/funcs/accounts";
+import { HttpInsecureWarning, useHttpRiskAck } from "@/app/components/HttpInsecureWarning";
 
 const VERSION_OPTIONS: HeadscaleVersion[] = ["0.29.x", "0.28.x", "0.27.x", "0.26.x", "0.25.x", "0.24.x", "0.23.x"];
 
@@ -36,6 +37,7 @@ export default function Accounts() {
   const [editingVersion, setEditingVersion] = useState<string | null>(null);
   
   const router = useRouter();
+  const httpRisk = useHttpRiskAck(server);
 
   const toggleInfo = (field: string) => {
     setShowInfo(showInfo === field ? null : field);
@@ -47,6 +49,7 @@ export default function Accounts() {
       server,
       apiKey,
       version: selectedVersion,
+      httpRiskAcknowledged: httpRisk.canProceed,
       onSuccess: () => {
         setModalVisible(false);
         setCustomName("");
@@ -253,6 +256,12 @@ export default function Accounts() {
                 <InfoText field="server">
                   Enter the full URL including http:// or https://
                 </InfoText>
+                <HttpInsecureWarning
+                  insecure={httpRisk.insecure}
+                  acknowledged={httpRisk.acknowledged}
+                  secondsLeft={httpRisk.secondsLeft}
+                  onToggle={httpRisk.toggleAcknowledged}
+                />
               </View>
 
               {/* Version Selector */}
@@ -312,8 +321,11 @@ export default function Accounts() {
                 </TouchableOpacity>
                 
                 <TouchableOpacity
-                  className="bg-blue-600 py-3 px-6 rounded-xl"
+                  className={`py-3 px-6 rounded-xl ${
+                    httpRisk.canProceed ? "bg-blue-600" : "bg-zinc-600"
+                  }`}
                   onPress={handleAdd}
+                  disabled={!httpRisk.canProceed}
                 >
                   {loading ? (
                     <ActivityIndicator color="#fff" size="small" />

@@ -5,6 +5,7 @@ import Toast from "react-native-toast-message";
 import { testAPIKeyDetailed } from "../api/login";
 import { normalizeApiKey } from "../utils/apiKeyUtils";
 import { parseVersion } from "../utils/getServer";
+import { isInsecureHttpUrl, useHttpRiskAck } from "../components/HttpInsecureWarning";
 
 export type HeadscaleVersion = "0.23.x" | "0.24.x" | "0.25.x" | "0.26.x" | "0.27.x" | "0.28.x" | "0.29.x";
 
@@ -17,6 +18,7 @@ export function useLogin() {
   const [headscaleVersion, setHeadscaleVersion] = useState<HeadscaleVersion>("0.29.x");
   const [showInfo, setShowInfo] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const httpRisk = useHttpRiskAck(server);
 
   // Toggle info display - close if same item clicked, open if different
   const toggleInfo = (field: string) => {
@@ -100,7 +102,17 @@ export function useLogin() {
       });
       return;
     }
-    
+
+    if (isInsecureHttpUrl(server) && !httpRisk.canProceed) {
+      Toast.show({
+        type: "error",
+        position: "top",
+        text1: "HTTP confirmation required",
+        text2: "Confirm you understand the risk before sending your API token over HTTP.",
+      });
+      return;
+    }
+
     const normalizedKey = normalizeApiKey(apiKey);
 
     let authResult: Awaited<ReturnType<typeof testAPIKeyDetailed>>;
@@ -172,5 +184,6 @@ export function useLogin() {
     loading,
     checkForPreviousKey,
     handleLogin,
+    httpRisk,
   };
 }
