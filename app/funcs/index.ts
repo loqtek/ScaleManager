@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useRouter } from "expo-router";
 import Toast from "react-native-toast-message";
@@ -25,7 +25,7 @@ export function useLogin() {
     setShowInfo(showInfo === field ? null : field);
   };
 
-  const checkForPreviousKey = async () => {
+  const checkForPreviousKey = useCallback(async () => {
     setLoading(true);
     const selectedName = await AsyncStorage.getItem("selectedServer");
     const serversJson = await AsyncStorage.getItem("servers");
@@ -80,7 +80,7 @@ export function useLogin() {
     }
 
     setLoading(false);
-  };
+  }, [router]);
 
   const handleLogin = async () => {
     if (!server || !apiKey || !customName) {

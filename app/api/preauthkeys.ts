@@ -1,4 +1,4 @@
-import { getApiEndpoints, makeApiRequest, isApiSuccess } from "../utils/apiUtils";
+import { getApiEndpoints, makeApiRequest } from "../utils/apiUtils";
 import { isV028OrHigher } from "../utils/headscaleVersion";
 
 export async function getPreAuthKeys(userIdentifier?: string) {

@@ -11,16 +11,18 @@ export function isInsecureHttpUrl(server: string): boolean {
 export function useHttpRiskAck(server: string) {
   const insecure = isInsecureHttpUrl(server);
   const [acknowledged, setAcknowledged] = useState(false);
-  const [secondsLeft, setSecondsLeft] = useState(WAIT_SECONDS);
+  const [secondsLeft, setSecondsLeft] = useState(0);
+  const [trackedInsecure, setTrackedInsecure] = useState(insecure);
+
+  if (insecure !== trackedInsecure) {
+    setTrackedInsecure(insecure);
+    setAcknowledged(false);
+    setSecondsLeft(insecure ? WAIT_SECONDS : 0);
+  }
 
   useEffect(() => {
-    setAcknowledged(false);
-    if (!insecure) {
-      setSecondsLeft(0);
-      return;
-    }
+    if (!insecure) return;
 
-    setSecondsLeft(WAIT_SECONDS);
     const started = Date.now();
     const timer = setInterval(() => {
       const remaining = Math.max(

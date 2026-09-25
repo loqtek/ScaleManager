@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { getDevices, registerDevice } from "../api/devices";
 import { approveAuth, rejectAuth } from "../api/auth";
 import { getUsers } from "../api/users";
@@ -19,7 +19,7 @@ export function useDevices() {
   const [serverVersion, setServerVersion] = useState<string>("");
   const router = useRouter();
 
-  const fetchDevices = async () => {
+  const fetchDevices = useCallback(async () => {
     setLoading(true);
     try {
       const config = await getApiEndpoints();
@@ -55,11 +55,14 @@ export function useDevices() {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
   useEffect(() => {
-    fetchDevices();
-  }, []);
+    const handle = setTimeout(() => {
+      void fetchDevices();
+    }, 0);
+    return () => clearTimeout(handle);
+  }, [fetchDevices]);
 
   const getDeviceTypeIcon = (deviceName: string = ""): any => {
     const name = deviceName.toLowerCase();
@@ -140,7 +143,6 @@ export function useDevices() {
         return;
       }
 
-      const { serverConf } = config;
       // Headscale RegisterNode resolves user by name, not numeric ID.
       const result = await registerDevice(user.name, keyOrAuthId);
 

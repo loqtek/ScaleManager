@@ -9,6 +9,70 @@ import { MaterialIcons } from "@expo/vector-icons";
 import Toast from "react-native-toast-message";
 import { useApiKeys } from "@/app/funcs/apikeys";
 
+function KeyDisplayModal({
+  visible,
+  apiKey,
+  onClose,
+  onCopy,
+}: {
+  visible: boolean;
+  apiKey: string | null;
+  onClose: () => void;
+  onCopy: (value: string) => void;
+}) {
+  return (
+    <Modal
+      animationType="slide"
+      transparent={true}
+      visible={visible}
+      onRequestClose={onClose}
+    >
+      <View className="flex-1 justify-center items-center px-4 bg-black/50">
+        <View className="bg-zinc-800 rounded-2xl p-6 w-full max-w-md shadow-2xl">
+          <View className="items-center mb-4">
+            <MaterialIcons name="vpn-key" size={48} color="#10b981" />
+            <Text className="text-white text-xl font-bold mt-2">
+              New API Key Created
+            </Text>
+            <Text className="text-slate-400 text-center mt-1">
+              Save this key securely - it won&apos;t be shown again
+            </Text>
+          </View>
+
+          <View className="bg-zinc-900 p-4 rounded-lg mb-4 border border-zinc-700">
+            <Text className="text-white font-mono text-sm break-all leading-6">
+              {apiKey}
+            </Text>
+          </View>
+
+          <View className="flex-row space-x-3">
+            <TouchableOpacity
+              onPress={() => apiKey && onCopy(apiKey)}
+              className="flex-1 bg-blue-600 py-3 rounded-lg flex-row items-center justify-center"
+              activeOpacity={0.7}
+            >
+              <MaterialIcons name="content-copy" size={18} color="white" />
+              <Text className="text-white font-semibold ml-2">Copy Key</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              onPress={onClose}
+              className="flex-1 bg-zinc-600 py-3 rounded-lg"
+              activeOpacity={0.7}
+            >
+              <Text className="text-white font-semibold text-center">Done</Text>
+            </TouchableOpacity>
+          </View>
+
+          <Text className="text-slate-500 text-xs text-center mt-3">
+            This is the only time you&apos;ll see the full API key
+          </Text>
+        </View>
+      </View>
+    </Modal>
+  );
+}
+
 export default function ApiKeysScreen() {
   const {
     apiKeys,
@@ -62,58 +126,6 @@ export default function ApiKeysScreen() {
     setShowKeyModal(false);
     setNewApiKey(null);
   };
-
-  const KeyDisplayModal = () => (
-    <Modal
-      animationType="slide"
-      transparent={true}
-      visible={showKeyModal}
-      onRequestClose={closeKeyModal}
-    >
-      <View className="flex-1 justify-center items-center px-4 bg-black/50">
-        <View className="bg-zinc-800 rounded-2xl p-6 w-full max-w-md shadow-2xl">
-          <View className="items-center mb-4">
-            <MaterialIcons name="vpn-key" size={48} color="#10b981" />
-            <Text className="text-white text-xl font-bold mt-2">
-              New API Key Created
-            </Text>
-            <Text className="text-slate-400 text-center mt-1">
-              Save this key securely - it won't be shown again
-            </Text>
-          </View>
-
-          <View className="bg-zinc-900 p-4 rounded-lg mb-4 border border-zinc-700">
-            <Text className="text-white font-mono text-sm break-all leading-6">
-              {newApiKey}
-            </Text>
-          </View>
-
-          <View className="flex-row space-x-3">
-            <TouchableOpacity
-              onPress={() => copyToClipboard(newApiKey!)}
-              className="flex-1 bg-blue-600 py-3 rounded-lg flex-row items-center justify-center"
-              activeOpacity={0.7}
-            >
-              <MaterialIcons name="content-copy" size={18} color="white" />
-              <Text className="text-white font-semibold ml-2">Copy Key</Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              onPress={closeKeyModal}
-              className="flex-1 bg-zinc-600 py-3 rounded-lg"
-              activeOpacity={0.7}
-            >
-              <Text className="text-white font-semibold text-center">Done</Text>
-            </TouchableOpacity>
-          </View>
-
-          <Text className="text-slate-500 text-xs text-center mt-3">
-            This is the only time you'll see the full API key
-          </Text>
-        </View>
-      </View>
-    </Modal>
-  );
 
   return (
     <SafeAreaView edges={["top", "left", "right"]} className="flex-1 bg-zinc-900">
@@ -287,7 +299,12 @@ export default function ApiKeysScreen() {
         </ScrollView>
       )}
 
-      <KeyDisplayModal />
+      <KeyDisplayModal
+        visible={showKeyModal}
+        apiKey={newApiKey}
+        onClose={closeKeyModal}
+        onCopy={copyToClipboard}
+      />
     </SafeAreaView>
   );
 }

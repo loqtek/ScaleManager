@@ -413,11 +413,16 @@ export default function SetupGuideModal({ visible, onClose }: SetupGuideModalPro
         </View>
       ),
     },
-  ], [width]);
+  ], []);
+
+  const [wasVisible, setWasVisible] = useState(visible);
+  if (visible !== wasVisible) {
+    setWasVisible(visible);
+    if (visible) setCurrentStep(0);
+  }
 
   useEffect(() => {
     if (visible) {
-      setCurrentStep(0);
       Animated.parallel([
         Animated.timing(fadeAnim, {
           toValue: 1,

@@ -27,7 +27,7 @@ export default function PreAuthKeysScreen() {
 
   useEffect(() => {
     fetchData();
-  }, []);
+  }, [fetchData]);
 
   const copyToClipboard = async (text: string, label: string) => {
     try {

@@ -1,4 +1,4 @@
-import React, { useRef } from "react";
+import React, { useState } from "react";
 import { 
   View, Text, TextInput, TouchableOpacity, 
  Animated
@@ -17,7 +17,7 @@ import { RoutesModal } from "../components/RoutesModal";
 export default function DeviceDetailScreen() {
   const { device: deviceData } = useLocalSearchParams<{ device: string }>();
   const router = useRouter();
-  const scrollY = useRef(new Animated.Value(0)).current;
+  const [scrollY] = useState(() => new Animated.Value(0));
   
   const {
     device,

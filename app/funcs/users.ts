@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Alert } from "react-native";
 import Toast from "react-native-toast-message";
 import { getUsers, addUser, deleteUser, renameUser } from "../api/users";
@@ -11,7 +11,7 @@ export function useUsers() {
   const [devices, setDevices] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
-  const fetchUsers = async () => {
+  const fetchUsers = useCallback(async () => {
     setLoading(true);
 
     try {
@@ -41,7 +41,7 @@ export function useUsers() {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
   // Function to count devices for a specific user
   const getUserDeviceCount = (userId: string | number): number => {
@@ -272,8 +272,11 @@ export function useUsers() {
   };
 
   useEffect(() => {
-    fetchUsers();
-  }, []);
+    const handle = setTimeout(() => {
+      void fetchUsers();
+    }, 0);
+    return () => clearTimeout(handle);
+  }, [fetchUsers]);
 
   return {
     users,

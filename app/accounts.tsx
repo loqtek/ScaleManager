@@ -18,6 +18,80 @@ import { HttpInsecureWarning, useHttpRiskAck } from "@/app/components/HttpInsecu
 
 const VERSION_OPTIONS: HeadscaleVersion[] = ["0.29.x", "0.28.x", "0.27.x", "0.26.x", "0.25.x", "0.24.x", "0.23.x"];
 
+function InfoButton({
+  field,
+  showInfo,
+  onPress,
+}: {
+  field: string;
+  showInfo: string | null;
+  onPress: () => void;
+}) {
+  return (
+    <TouchableOpacity onPress={onPress} className="p-1">
+      <MaterialIcons
+        name={showInfo === field ? "info" : "info-outline"}
+        size={18}
+        color={showInfo === field ? "#60a5fa" : "#cbd5e1"}
+      />
+    </TouchableOpacity>
+  );
+}
+
+function InfoText({
+  field,
+  showInfo,
+  children,
+}: {
+  field: string;
+  showInfo: string | null;
+  children: React.ReactNode;
+}) {
+  if (showInfo !== field) return null;
+  return (
+    <View className="bg-zinc-700 p-3 rounded-md mt-2 border-l-4 border-blue-500">
+      <Text className="text-sm text-slate-200 leading-5">{children}</Text>
+    </View>
+  );
+}
+
+function VersionSelector({
+  currentVersion,
+  onVersionChange,
+}: {
+  currentVersion: HeadscaleVersion;
+  onVersionChange: (version: HeadscaleVersion) => void;
+}) {
+  return (
+    <ScrollView
+      horizontal
+      showsHorizontalScrollIndicator={false}
+      className="flex-row"
+      contentContainerStyle={{ paddingRight: 20 }}
+    >
+      {VERSION_OPTIONS.map((version) => (
+        <TouchableOpacity
+          key={version}
+          onPress={() => onVersionChange(version)}
+          className={`mr-3 px-3 py-2 rounded-lg border-2 ${
+            currentVersion === version
+              ? "bg-blue-600 border-blue-500"
+              : "bg-zinc-700 border-zinc-600"
+          }`}
+        >
+          <Text
+            className={`font-semibold text-sm ${
+              currentVersion === version ? "text-white" : "text-slate-300"
+            }`}
+          >
+            {version}
+          </Text>
+        </TouchableOpacity>
+      ))}
+    </ScrollView>
+  );
+}
+
 export default function Accounts() {
   const {
     accounts,
@@ -63,59 +137,6 @@ export default function Accounts() {
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString();
   };
-
-  const InfoButton = ({ field, onPress }: { field: string; onPress: () => void }) => (
-    <TouchableOpacity onPress={onPress} className="p-1">
-      <MaterialIcons 
-        name={showInfo === field ? "info" : "info-outline"} 
-        size={18} 
-        color={showInfo === field ? "#60a5fa" : "#cbd5e1"} 
-      />
-    </TouchableOpacity>
-  );
-
-  const InfoText = ({ field, children }: { field: string; children: React.ReactNode }) => (
-    showInfo === field ? (
-      <View className="bg-zinc-700 p-3 rounded-md mt-2 border-l-4 border-blue-500">
-        <Text className="text-sm text-slate-200 leading-5">
-          {children}
-        </Text>
-      </View>
-    ) : null
-  );
-
-  const VersionSelector = ({ 
-    currentVersion, 
-    onVersionChange 
-  }: { 
-    currentVersion: HeadscaleVersion; 
-    onVersionChange: (version: HeadscaleVersion) => void;
-  }) => (
-    <ScrollView 
-      horizontal 
-      showsHorizontalScrollIndicator={false}
-      className="flex-row"
-      contentContainerStyle={{ paddingRight: 20 }}
-    >
-      {VERSION_OPTIONS.map((version) => (
-        <TouchableOpacity
-          key={version}
-          onPress={() => onVersionChange(version)}
-          className={`mr-3 px-3 py-2 rounded-lg border-2 ${
-            currentVersion === version 
-              ? 'bg-blue-600 border-blue-500' 
-              : 'bg-zinc-700 border-zinc-600'
-          }`}
-        >
-          <Text className={`font-semibold text-sm ${
-            currentVersion === version ? 'text-white' : 'text-slate-300'
-          }`}>
-            {version}
-          </Text>
-        </TouchableOpacity>
-      ))}
-    </ScrollView>
-  );
 
   return (
     <SafeAreaView className="flex-1 bg-zinc-900">
@@ -224,7 +245,7 @@ export default function Accounts() {
               <View className="mb-4">
                 <View className="flex-row items-center justify-between mb-2">
                   <Text className="text-white">Server Name</Text>
-                  <InfoButton field="name" onPress={() => toggleInfo("name")} />
+                  <InfoButton field="name" showInfo={showInfo} onPress={() => toggleInfo("name")} />
                 </View>
                 <TextInput
                   className="bg-zinc-700 text-white p-3 rounded-md"
@@ -233,7 +254,7 @@ export default function Accounts() {
                   value={customName}
                   onChangeText={setCustomName}
                 />
-                <InfoText field="name">
+                <InfoText field="name" showInfo={showInfo}>
                   Give this server a memorable name to identify it easily.
                 </InfoText>
               </View>
@@ -242,7 +263,7 @@ export default function Accounts() {
               <View className="mb-4">
                 <View className="flex-row items-center justify-between mb-2">
                   <Text className="text-white">Server URL</Text>
-                  <InfoButton field="server" onPress={() => toggleInfo("server")} />
+                  <InfoButton field="server" showInfo={showInfo} onPress={() => toggleInfo("server")} />
                 </View>
                 <TextInput
                   className="bg-zinc-700 text-white p-3 rounded-md"
@@ -253,7 +274,7 @@ export default function Accounts() {
                   autoCapitalize="none"
                   autoCorrect={false}
                 />
-                <InfoText field="server">
+                <InfoText field="server" showInfo={showInfo}>
                   Enter the full URL including http:// or https://
                 </InfoText>
                 <HttpInsecureWarning
@@ -268,13 +289,13 @@ export default function Accounts() {
               <View className="mb-4">
                 <View className="flex-row items-center justify-between mb-2">
                   <Text className="text-white">Headscale Version</Text>
-                  <InfoButton field="version" onPress={() => toggleInfo("version")} />
+                  <InfoButton field="version" showInfo={showInfo} onPress={() => toggleInfo("version")} />
                 </View>
                 <VersionSelector 
                   currentVersion={selectedVersion}
                   onVersionChange={setSelectedVersion}
                 />
-                <InfoText field="version">
+                <InfoText field="version" showInfo={showInfo}>
                   Select your server's Headscale version for API compatibility. Check with: {'\n'}
                   <Text className="text-slate-100 font-mono">headscale version</Text>
                 </InfoText>
@@ -284,7 +305,7 @@ export default function Accounts() {
               <View className="mb-6">
                 <View className="flex-row items-center justify-between mb-2">
                   <Text className="text-white">API Key</Text>
-                  <InfoButton field="key" onPress={() => toggleInfo("key")} />
+                  <InfoButton field="key" showInfo={showInfo} onPress={() => toggleInfo("key")} />
                 </View>
                 <TextInput
                   className="bg-zinc-700 text-white p-3 rounded-md"
@@ -296,7 +317,7 @@ export default function Accounts() {
                   autoCapitalize="none"
                   autoCorrect={false}
                 />
-                <InfoText field="key">
+                <InfoText field="key" showInfo={showInfo}>
                   Generate a management API key (not a pre-auth key):{"\n"}
                   <Text className="text-slate-100 font-mono">headscale apikeys create --expiration 90d</Text>
                   {"\n"}

@@ -31,7 +31,7 @@ export default function RoutesScreen() {
 
   useEffect(() => {
     fetchRoutes();
-  }, []);
+  }, [fetchRoutes]);
 
   if (loading) {
     return (

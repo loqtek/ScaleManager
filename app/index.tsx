@@ -16,6 +16,96 @@ import { HttpInsecureWarning } from "@/app/components/HttpInsecureWarning";
 
 const VERSION_OPTIONS: HeadscaleVersion[] = ["0.29.x", "0.28.x", "0.27.x", "0.26.x", "0.25.x", "0.24.x", "0.23.x"];
 
+function InfoButton({
+  field,
+  showInfo,
+  onPress,
+}: {
+  field: string;
+  showInfo: string | null;
+  onPress: () => void;
+}) {
+  return (
+    <TouchableOpacity onPress={onPress} className="p-1">
+      <MaterialIcons
+        name={showInfo === field ? "info" : "info-outline"}
+        size={18}
+        color={showInfo === field ? "#60a5fa" : "#cbd5e1"}
+      />
+    </TouchableOpacity>
+  );
+}
+
+function InfoText({
+  field,
+  showInfo,
+  children,
+}: {
+  field: string;
+  showInfo: string | null;
+  children: React.ReactNode;
+}) {
+  if (showInfo !== field) return null;
+  return (
+    <View className="bg-zinc-700 p-3 rounded-md mt-2 border-l-4 border-blue-500">
+      <Text className="text-sm text-slate-200 leading-5">{children}</Text>
+    </View>
+  );
+}
+
+function VersionSelector({
+  headscaleVersion,
+  setHeadscaleVersion,
+  showInfo,
+  toggleInfo,
+}: {
+  headscaleVersion: HeadscaleVersion;
+  setHeadscaleVersion: (version: HeadscaleVersion) => void;
+  showInfo: string | null;
+  toggleInfo: (field: string) => void;
+}) {
+  return (
+    <View className="mb-4">
+      <View className="flex-row items-center justify-between mb-2">
+        <Text className="text-white">Headscale Version</Text>
+        <InfoButton field="version" showInfo={showInfo} onPress={() => toggleInfo("version")} />
+      </View>
+
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        className="flex-row"
+        contentContainerStyle={{ paddingRight: 20 }}
+      >
+        {VERSION_OPTIONS.map((version) => (
+          <TouchableOpacity
+            key={version}
+            onPress={() => setHeadscaleVersion(version)}
+            className={`mr-3 px-4 py-2 rounded-lg border-2 ${
+              headscaleVersion === version
+                ? "bg-blue-600 border-blue-500"
+                : "bg-zinc-700 border-zinc-600"
+            }`}
+          >
+            <Text
+              className={`font-semibold ${
+                headscaleVersion === version ? "text-white" : "text-slate-300"
+              }`}
+            >
+              {version}
+            </Text>
+          </TouchableOpacity>
+        ))}
+      </ScrollView>
+
+      <InfoText field="version" showInfo={showInfo}>
+        Select your Headscale server version to ensure compatibility with the correct API endpoints. Different versions may use different API paths and request formats. If unsure, check your server version with: {"\n"}
+        <Text className="text-slate-100 font-mono">headscale version</Text>
+      </InfoText>
+    </View>
+  );
+}
+
 export default function LoginScreen() {
   const {
     customName,
@@ -36,66 +126,7 @@ export default function LoginScreen() {
 
   useEffect(() => {
     checkForPreviousKey();
-  }, []);
-
-  const InfoButton = ({ field, onPress }: { field: string; onPress: () => void }) => (
-    <TouchableOpacity onPress={onPress} className="p-1">
-      <MaterialIcons 
-        name={showInfo === field ? "info" : "info-outline"} 
-        size={18} 
-        color={showInfo === field ? "#60a5fa" : "#cbd5e1"} 
-      />
-    </TouchableOpacity>
-  );
-
-  const InfoText = ({ field, children }: { field: string; children: React.ReactNode }) => (
-    showInfo === field ? (
-      <View className="bg-zinc-700 p-3 rounded-md mt-2 border-l-4 border-blue-500">
-        <Text className="text-sm text-slate-200 leading-5">
-          {children}
-        </Text>
-      </View>
-    ) : null
-  );
-
-  const VersionSelector = () => (
-    <View className="mb-4">
-      <View className="flex-row items-center justify-between mb-2">
-        <Text className="text-white">Headscale Version</Text>
-        <InfoButton field="version" onPress={() => toggleInfo("version")} />
-      </View>
-      
-      <ScrollView 
-        horizontal 
-        showsHorizontalScrollIndicator={false}
-        className="flex-row"
-        contentContainerStyle={{ paddingRight: 20 }}
-      >
-        {VERSION_OPTIONS.map((version) => (
-          <TouchableOpacity
-            key={version}
-            onPress={() => setHeadscaleVersion(version)}
-            className={`mr-3 px-4 py-2 rounded-lg border-2 ${
-              headscaleVersion === version 
-                ? 'bg-blue-600 border-blue-500' 
-                : 'bg-zinc-700 border-zinc-600'
-            }`}
-          >
-            <Text className={`font-semibold ${
-              headscaleVersion === version ? 'text-white' : 'text-slate-300'
-            }`}>
-              {version}
-            </Text>
-          </TouchableOpacity>
-        ))}
-      </ScrollView>
-      
-      <InfoText field="version">
-        Select your Headscale server version to ensure compatibility with the correct API endpoints. Different versions may use different API paths and request formats. If unsure, check your server version with: {"\n"}
-        <Text className="text-slate-100 font-mono">headscale version</Text>
-      </InfoText>
-    </View>
-  );
+  }, [checkForPreviousKey]);
 
   return (
     <KeyboardAvoidingView
@@ -133,7 +164,7 @@ export default function LoginScreen() {
             <View className="mb-4">
               <View className="flex-row items-center justify-between mb-2">
                 <Text className="text-white">Custom Server Name</Text>
-                <InfoButton field="name" onPress={() => toggleInfo("name")} />
+                <InfoButton field="name" showInfo={showInfo} onPress={() => toggleInfo("name")} />
               </View>
               <TextInput
                 className="bg-zinc-700 text-white p-3 rounded-md"
@@ -142,7 +173,7 @@ export default function LoginScreen() {
                 value={customName}
                 onChangeText={setCustomName}
               />
-              <InfoText field="name">
+              <InfoText field="name" showInfo={showInfo}>
                 Give your Headscale server a nickname to easily identify it later. This helps when managing multiple servers.
               </InfoText>
             </View>
@@ -151,7 +182,7 @@ export default function LoginScreen() {
             <View className="mb-4">
               <View className="flex-row items-center justify-between mb-2">
                 <Text className="text-white">Server Domain / IP</Text>
-                <InfoButton field="server" onPress={() => toggleInfo("server")} />
+                <InfoButton field="server" showInfo={showInfo} onPress={() => toggleInfo("server")} />
               </View>
               <TextInput
                 className="bg-zinc-700 text-white p-3 rounded-md"
@@ -162,7 +193,7 @@ export default function LoginScreen() {
                 autoCapitalize="none"
                 autoCorrect={false}
               />
-              <InfoText field="server">
+              <InfoText field="server" showInfo={showInfo}>
                 Enter your Headscale server's full URL including http:// or https://. The server must be accessible from your device over the internet or local network.
               </InfoText>
               <HttpInsecureWarning
@@ -174,13 +205,18 @@ export default function LoginScreen() {
             </View>
 
             {/* Version Selector */}
-            <VersionSelector />
+            <VersionSelector
+              headscaleVersion={headscaleVersion}
+              setHeadscaleVersion={setHeadscaleVersion}
+              showInfo={showInfo}
+              toggleInfo={toggleInfo}
+            />
 
             {/* API Key Input */}
             <View className="mb-6">
               <View className="flex-row items-center justify-between mb-2">
                 <Text className="text-white">API Key</Text>
-                <InfoButton field="key" onPress={() => toggleInfo("key")} />
+                <InfoButton field="key" showInfo={showInfo} onPress={() => toggleInfo("key")} />
               </View>
               <TextInput
                 className="bg-zinc-700 text-white p-3 rounded-md"
@@ -192,7 +228,7 @@ export default function LoginScreen() {
                 autoCapitalize="none"
                 autoCorrect={false}
               />
-              <InfoText field="key">
+              <InfoText field="key" showInfo={showInfo}>
                 Generate a management API key (not a pre-auth key):{"\n"}
                 <Text className="text-slate-100 font-mono">headscale apikeys create --expiration 90d</Text>
                 {"\n\n"}

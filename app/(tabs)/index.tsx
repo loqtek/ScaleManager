@@ -55,7 +55,8 @@ export default function IndexScreen() {
   useEffect(() => {
     measurePing();
     fetchData();
-  }, []);
+  }, [measurePing, fetchData]);
+
   const handleGitHub = async () => {
     const url = "https://github.com/loqtek/ScaleManager/issues";
     const supported = await Linking.canOpenURL(url);
@@ -85,11 +86,6 @@ export default function IndexScreen() {
       );
     }
   };
-
-  useEffect(() => {
-    measurePing();
-    fetchData();
-  }, []);
 
   return (
     <SafeAreaView edges={["top", "left", "right"]} className="flex-1 bg-zinc-900">

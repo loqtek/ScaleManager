@@ -73,7 +73,7 @@ export const useACL = (): ACLHookReturn => {
         try {
           const parsedPolicy = JSON.parse(formattedPolicy);
           formattedPolicy = JSON.stringify(parsedPolicy, null, 2);
-        } catch (e) {
+        } catch {
           formattedPolicy = formattedPolicy.replace(/\\n/g, '\n');
         }
         
@@ -271,7 +271,10 @@ export const useACL = (): ACLHookReturn => {
   }, [fetchPolicy]);
 
   useEffect(() => {
-    fetchPolicy();
+    const handle = setTimeout(() => {
+      void fetchPolicy();
+    }, 0);
+    return () => clearTimeout(handle);
   }, [fetchPolicy]);
 
   return {
