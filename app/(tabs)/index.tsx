@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import {
   Text,
   View,
@@ -13,9 +13,12 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import { FontAwesome, MaterialIcons, Ionicons } from "@expo/vector-icons";
 import { useDashboardData } from "@/app/funcs/tabsHome";
+import { exportFrontendLogs } from "@/app/utils/frontendLog";
+import Toast from "react-native-toast-message";
 
 export default function IndexScreen() {
   const router = useRouter();
+  const [exportingLogs, setExportingLogs] = useState(false);
   const {
     devices,
     usersCount,
@@ -69,6 +72,30 @@ export default function IndexScreen() {
         "Unable to open GitHub. Please visit: https://github.com/loqtek/ScaleManager/issues",
         [{ text: "OK" }]
       );
+    }
+  };
+
+  const handleExportLogs = async () => {
+    if (exportingLogs) return;
+    setExportingLogs(true);
+    try {
+      await exportFrontendLogs();
+      Toast.show({
+        type: "success",
+        position: "top",
+        text1: "Logs ready",
+        text2: "Save or share the log file to debug this session.",
+      });
+    } catch (error) {
+      console.error("Failed to export logs:", error);
+      Toast.show({
+        type: "error",
+        position: "top",
+        text1: "Export failed",
+        text2: "Could not write the log file.",
+      });
+    } finally {
+      setExportingLogs(false);
     }
   };
 
@@ -249,6 +276,18 @@ export default function IndexScreen() {
                 <MaterialIcons name="bug-report" size={18} color="white" />
                 <Text className="text-white font-semibold ml-2">
                   Report Issues & Suggestions
+                </Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                onPress={handleExportLogs}
+                disabled={exportingLogs}
+                className="bg-zinc-700 py-3 px-4 rounded-lg flex-row items-center justify-center border border-zinc-600 mb-4"
+                activeOpacity={0.8}
+              >
+                <MaterialIcons name="file-download" size={18} color="#93c5fd" />
+                <Text className="text-slate-200 font-semibold ml-2">
+                  {exportingLogs ? "Preparing log file..." : "Export debug logs"}
                 </Text>
               </TouchableOpacity>
 

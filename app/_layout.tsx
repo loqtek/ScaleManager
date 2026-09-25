@@ -1,5 +1,6 @@
 import { Slot } from "expo-router";
 import { SafeAreaProvider } from "react-native-safe-area-context";
+import { installFrontendLogger } from "./utils/frontendLog";
 import Toast, {
   BaseToast,
   ErrorToast,
@@ -7,6 +8,8 @@ import Toast, {
   type ToastConfig,
 } from "react-native-toast-message";
 import "../global.css";
+
+installFrontendLogger();
 
 // Clear the library's fixed 60px height so long text2 messages can wrap fully.
 const toastBaseStyle = {
