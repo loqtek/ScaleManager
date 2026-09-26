@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Text, TouchableOpacity, View } from "react-native";
 import { MaterialIcons } from "@expo/vector-icons";
+import { useTheme } from "@/theme";
 
 const WAIT_SECONDS = 5;
 
@@ -63,13 +64,18 @@ export function HttpInsecureWarning({
   secondsLeft: number;
   onToggle: () => void;
 }) {
+  const { theme } = useTheme();
+  const { colors } = theme;
   if (!insecure) return null;
 
   const locked = secondsLeft > 0;
 
   return (
-    <View className="mt-3 rounded-md border border-amber-600 bg-amber-950 p-3">
-      <Text className="text-sm leading-5 text-amber-100">
+    <View
+      className="mt-3 rounded-md border p-3"
+      style={{ borderColor: colors.warning, backgroundColor: colors.surfaceMuted }}
+    >
+      <Text className="text-sm leading-5" style={{ color: colors.text }}>
         HTTP does not encrypt traffic. By checking this box you understand that
         this risks your admin API token and is insecure. Please only proceed
         with caution and ensure you understand the risks.
@@ -83,12 +89,11 @@ export function HttpInsecureWarning({
         <MaterialIcons
           name={acknowledged ? "check-box" : "check-box-outline-blank"}
           size={22}
-          color={locked ? "#78716c" : "#fbbf24"}
+          color={locked ? colors.muted : colors.warning}
         />
         <Text
-          className={`ml-2 flex-1 text-sm ${
-            locked ? "text-stone-400" : "text-amber-50"
-          }`}
+          className="ml-2 flex-1 text-sm"
+          style={{ color: locked ? colors.muted : colors.text }}
         >
           {locked
             ? `Read the warning before continuing (${secondsLeft}s)`

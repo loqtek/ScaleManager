@@ -13,8 +13,11 @@ import { InfoRow } from "../components/InfoRow";
 import { UserSelectionModal } from "../components/UserSelectionModal";
 import { TagsModal } from "../components/TagsModal";
 import { RoutesModal } from "../components/RoutesModal";
+import { useTheme } from "@/theme";
 
 export default function DeviceDetailScreen() {
+  const { theme } = useTheme();
+  const colors = theme.colors;
   const { device: deviceData } = useLocalSearchParams<{ device: string }>();
   const router = useRouter();
   const [scrollY] = useState(() => new Animated.Value(0));
@@ -78,23 +81,23 @@ export default function DeviceDetailScreen() {
 
   if (!device) {
     return (
-      <SafeAreaView className="flex-1 bg-zinc-900 justify-center items-center">
-        <MaterialIcons name="devices-other" size={64} color="#6b7280" />
-        <Text className="text-white mt-4">Loading device details...</Text>
+      <SafeAreaView className="flex-1 justify-center items-center" style={{ backgroundColor: colors.background }}>
+        <MaterialIcons name="devices-other" size={64} color={colors.muted} />
+        <Text className="mt-4" style={{ color: colors.text }}>Loading device details...</Text>
       </SafeAreaView>
     );
   }
 
   return (
-    <SafeAreaView className="flex-1 bg-zinc-900">
+    <SafeAreaView className="flex-1" style={{ backgroundColor: colors.background }}>
       {/* Sticky Header */}
       <Animated.View 
         style={{ 
           height: headerHeight,
-          backgroundColor: '#18181b',
+          backgroundColor: colors.background,
           borderBottomWidth: 1,
-          borderBottomColor: '#3f3f46',
-          shadowColor: '#000',
+          borderBottomColor: colors.border,
+          shadowColor: colors.text,
           shadowOffset: { width: 0, height: 2 },
           shadowOpacity: 0.25,
           shadowRadius: 3.84,
@@ -108,16 +111,15 @@ export default function DeviceDetailScreen() {
             onPress={() => router.push("/(tabs)/devices")}
             className="flex-row items-center"
           >
-            <MaterialIcons name="arrow-back" size={24} color="white" />
-            <Text className="text-white text-lg font-semibold ml-2">Back</Text>
+            <MaterialIcons name="arrow-back" size={24} color={colors.text} />
+            <Text className="text-lg font-semibold ml-2" style={{ color: colors.text }}>Back</Text>
           </TouchableOpacity>
           
-          <View className={`px-3 py-1 rounded-full ${
-            device.online ? 'bg-green-500/20' : 'bg-red-500/20'
-          }`}>
-            <Text className={`text-sm font-semibold ${
-              device.online ? 'text-green-400' : 'text-red-400'
-            }`}>
+          <View
+            className="px-3 py-1 rounded-full"
+            style={{ backgroundColor: device.online ? colors.successSoft : colors.errorSoft }}
+          >
+            <Text className="text-sm font-semibold" style={{ color: device.online ? colors.success : colors.error }}>
               {device.online ? 'ONLINE' : 'OFFLINE'}
             </Text>
           </View>
@@ -131,10 +133,10 @@ export default function DeviceDetailScreen() {
           }}
           className="items-center"
         >
-          <Text className="text-white text-xl font-bold" numberOfLines={1}>
+          <Text className="text-xl font-bold" style={{ color: colors.text }} numberOfLines={1}>
             {device.givenName || device.name}
           </Text>
-          <Text className="text-slate-400 text-sm" numberOfLines={1}>
+          <Text className="text-sm" style={{ color: colors.textMuted }} numberOfLines={1}>
             {device.user?.name} • {device.ipAddresses?.[0]}
           </Text>
         </Animated.View>
@@ -149,10 +151,10 @@ export default function DeviceDetailScreen() {
           }}
           className="items-center"
         >
-          <Text className="text-white font-semibold text-base" numberOfLines={1}>
+          <Text className="font-semibold text-base" style={{ color: colors.text }} numberOfLines={1}>
             {device.givenName || device.name}
           </Text>
-          <Text className="text-slate-400 text-xs" numberOfLines={1}>
+          <Text className="text-xs" style={{ color: colors.textMuted }} numberOfLines={1}>
             {device.ipAddresses?.[0]}
           </Text>
         </Animated.View>
@@ -168,26 +170,26 @@ export default function DeviceDetailScreen() {
       >
         <View className="pt-4 ">
           {/* Basic Information */}
-          <View className="bg-zinc-800 rounded-xl p-4 mb-4 border border-zinc-700">
-            <Text className="text-white text-lg font-semibold mb-4">Basic Information</Text>
+          <View className="rounded-xl p-4 mb-4 border" style={{ backgroundColor: colors.surface, borderColor: colors.border }}>
+            <Text className="text-lg font-semibold mb-4" style={{ color: colors.text }}>Basic Information</Text>
             
             {editingField === "name" ? (
               <View className="mb-4">
-                <Text className="text-slate-400 text-sm font-medium mb-1">Device Name:</Text>
+                <Text className="text-sm font-medium mb-1" style={{ color: colors.textMuted }}>Device Name:</Text>
                 <View className="flex-row space-x-2">
                   <TextInput
-                    className="flex-1 bg-zinc-700 text-white p-3 rounded-lg"
+                    className="flex-1 p-3 rounded-lg" style={{ backgroundColor: colors.surfaceMuted, color: colors.text }}
                     value={tempValue}
                     onChangeText={setTempValue}
                     placeholder="Enter device name"
-                    placeholderTextColor="#94a3b8"
+                    placeholderTextColor={colors.textMuted}
                     autoFocus
                   />
-                  <TouchableOpacity onPress={handleRename} className="bg-green-600 px-4 py-3 rounded-lg">
-                    <MaterialIcons name="check" size={16} color="white" />
+                  <TouchableOpacity onPress={handleRename} className="px-4 py-3 rounded-lg" style={{ backgroundColor: colors.success }}>
+                    <MaterialIcons name="check" size={16} color={colors.onPrimary} />
                   </TouchableOpacity>
-                  <TouchableOpacity onPress={() => setEditingField(null)} className="bg-gray-600 px-4 py-3 rounded-lg">
-                    <MaterialIcons name="close" size={16} color="white" />
+                  <TouchableOpacity onPress={() => setEditingField(null)} className="px-4 py-3 rounded-lg" style={{ backgroundColor: colors.secondary }}>
+                    <MaterialIcons name="close" size={16} color={colors.onSecondary} />
                   </TouchableOpacity>
                 </View>
               </View>
@@ -218,15 +220,15 @@ export default function DeviceDetailScreen() {
           </View>
 
           {/* User Information */}
-          <View className="bg-zinc-800 rounded-xl p-4 mb-4 border border-zinc-700">
+          <View className="rounded-xl p-4 mb-4 border" style={{ backgroundColor: colors.surface, borderColor: colors.border }}>
             <View className="flex-row justify-between items-center mb-4">
-              <Text className="text-white text-lg font-semibold">User Assignment</Text>
+              <Text className="text-lg font-semibold" style={{ color: colors.text }}>User Assignment</Text>
               {canChangeUser ? (
-                <TouchableOpacity onPress={() => setShowUserModal(true)} className="bg-blue-600 px-3 py-1 rounded">
-                  <Text className="text-white text-sm">Change</Text>
+                <TouchableOpacity onPress={() => setShowUserModal(true)} className="px-3 py-1 rounded" style={{ backgroundColor: colors.primary }}>
+                  <Text className="text-sm" style={{ color: colors.onPrimary }}>Change</Text>
                 </TouchableOpacity>
               ) : (
-                <Text className="text-slate-500 text-xs">Fixed at registration (v0.28+)</Text>
+                <Text className="text-xs" style={{ color: colors.muted }}>Fixed at registration (v0.28+)</Text>
               )}
             </View>
             
@@ -241,20 +243,20 @@ export default function DeviceDetailScreen() {
           </View>
 
           {/* Network Keys */}
-          <View className="bg-zinc-800 rounded-xl p-4 mb-4 border border-zinc-700">
-            <Text className="text-white text-lg font-semibold mb-4">Network Keys</Text>
+          <View className="rounded-xl p-4 mb-4 border" style={{ backgroundColor: colors.surface, borderColor: colors.border }}>
+            <Text className="text-lg font-semibold mb-4" style={{ color: colors.text }}>Network Keys</Text>
             <InfoRow label="Machine Key" value={device.machineKey} copyable />
             <InfoRow label="Node Key" value={device.nodeKey} copyable />
             <InfoRow label="Disco Key" value={device.discoKey} copyable />
           </View>
 
           {/* Routes */}
-          <View className="bg-zinc-800 rounded-xl p-4 mb-4 border border-zinc-700">
+          <View className="rounded-xl p-4 mb-4 border" style={{ backgroundColor: colors.surface, borderColor: colors.border }}>
             <View className="flex-row justify-between items-center mb-4">
-              <Text className="text-white text-lg font-semibold">Route Management</Text>
+              <Text className="text-lg font-semibold" style={{ color: colors.text }}>Route Management</Text>
               {device.availableRoutes?.length > 0 && (
-                <TouchableOpacity onPress={() => setShowRoutesModal(true)} className="bg-green-600 px-3 py-1 rounded">
-                  <Text className="text-white text-sm">Approve Routes</Text>
+                <TouchableOpacity onPress={() => setShowRoutesModal(true)} className="px-3 py-1 rounded" style={{ backgroundColor: colors.success }}>
+                  <Text className="text-sm" style={{ color: colors.onPrimary }}>Approve Routes</Text>
                 </TouchableOpacity>
               )}
             </View>
@@ -262,17 +264,17 @@ export default function DeviceDetailScreen() {
             {/* Approved Routes */}
             {device.approvedRoutes?.length > 0 && (
               <View className="mb-4">
-                <Text className="text-slate-400 text-sm font-medium mb-2">Approved Routes:</Text>
-                <View className="bg-zinc-700 rounded-lg p-3">
+                <Text className="text-sm font-medium mb-2" style={{ color: colors.textMuted }}>Approved Routes:</Text>
+                <View className="rounded-lg p-3" style={{ backgroundColor: colors.surfaceMuted }}>
                   {device.approvedRoutes.map((route, index) => (
                     <View key={index} className="flex-row justify-between items-center py-1">
-                      <Text className="text-green-400 font-mono text-sm flex-1">{route}</Text>
+                      <Text className="font-mono text-sm flex-1" style={{ color: colors.success }}>{route}</Text>
                       <View className="flex-row space-x-2">
                         <TouchableOpacity onPress={() => copyToClipboard(route, "Route")}>
-                          <MaterialIcons name="content-copy" size={16} color="#60a5fa" />
+                          <MaterialIcons name="content-copy" size={16} color={colors.primaryMuted} />
                         </TouchableOpacity>
                         <TouchableOpacity onPress={() => handleRemoveRoute(route)}>
-                          <MaterialIcons name="close" size={16} color="#f87171" />
+                          <MaterialIcons name="close" size={16} color={colors.error} />
                         </TouchableOpacity>
                       </View>
                     </View>
@@ -284,18 +286,18 @@ export default function DeviceDetailScreen() {
             {/* Available Routes */}
             {device.availableRoutes?.length > 0 && (
               <View className="mb-4">
-                <Text className="text-slate-400 text-sm font-medium mb-2">Available Routes:</Text>
-                <View className="bg-zinc-700 rounded-lg p-3">
+                <Text className="text-sm font-medium mb-2" style={{ color: colors.textMuted }}>Available Routes:</Text>
+                <View className="rounded-lg p-3" style={{ backgroundColor: colors.surfaceMuted }}>
                   {device.availableRoutes.map((route, index) => (
                     <View key={index} className="flex-row justify-between items-center py-1">
-                      <Text className="text-yellow-400 font-mono text-sm flex-1">{route}</Text>
+                      <Text className="font-mono text-sm flex-1" style={{ color: colors.warning }}>{route}</Text>
                       <TouchableOpacity onPress={() => copyToClipboard(route, "Route")}>
-                        <MaterialIcons name="content-copy" size={16} color="#60a5fa" />
+                        <MaterialIcons name="content-copy" size={16} color={colors.primaryMuted} />
                       </TouchableOpacity>
                     </View>
                   ))}
                 </View>
-                <Text className="text-slate-500 text-xs mt-2">
+                <Text className="text-xs mt-2" style={{ color: colors.muted }}>
                   Tap "Approve Routes" to move available routes to approved routes
                 </Text>
               </View>
@@ -304,13 +306,13 @@ export default function DeviceDetailScreen() {
             {/* Subnet Routes */}
             {device.subnetRoutes?.length > 0 && (
               <View>
-                <Text className="text-slate-400 text-sm font-medium mb-2">Subnet Routes:</Text>
-                <View className="bg-zinc-700 rounded-lg p-3">
+                <Text className="text-sm font-medium mb-2" style={{ color: colors.textMuted }}>Subnet Routes:</Text>
+                <View className="rounded-lg p-3" style={{ backgroundColor: colors.surfaceMuted }}>
                   {device.subnetRoutes.map((route, index) => (
                     <View key={index} className="flex-row justify-between items-center py-1">
-                      <Text className="text-blue-400 font-mono text-sm flex-1">{route}</Text>
+                      <Text className="font-mono text-sm flex-1" style={{ color: colors.primaryMuted }}>{route}</Text>
                       <TouchableOpacity onPress={() => copyToClipboard(route, "Route")}>
-                        <MaterialIcons name="content-copy" size={16} color="#60a5fa" />
+                        <MaterialIcons name="content-copy" size={16} color={colors.primaryMuted} />
                       </TouchableOpacity>
                     </View>
                   ))}
@@ -319,16 +321,16 @@ export default function DeviceDetailScreen() {
             )}
             
             {(!device.approvedRoutes?.length && !device.availableRoutes?.length && !device.subnetRoutes?.length) && (
-              <Text className="text-slate-400 text-center py-4">No routes configured</Text>
+              <Text className="text-center py-4" style={{ color: colors.textMuted }}>No routes configured</Text>
             )}
           </View>
 
           {/* Tags */}
-          <View className="bg-zinc-800 rounded-xl p-4 mb-4 border border-zinc-700">
+          <View className="rounded-xl p-4 mb-4 border" style={{ backgroundColor: colors.surface, borderColor: colors.border }}>
             <View className="flex-row justify-between items-center mb-4">
-              <Text className="text-white text-lg font-semibold">Tags</Text>
-              <TouchableOpacity onPress={() => setShowTagsModal(true)} className="bg-yellow-600 px-3 py-1 rounded">
-                <Text className="text-white text-sm">Add</Text>
+              <Text className="text-lg font-semibold" style={{ color: colors.text }}>Tags</Text>
+              <TouchableOpacity onPress={() => setShowTagsModal(true)} className="px-3 py-1 rounded" style={{ backgroundColor: colors.warning }}>
+                <Text className="text-sm" style={{ color: colors.onPrimary }}>Add</Text>
               </TouchableOpacity>
             </View>
             
@@ -343,14 +345,14 @@ export default function DeviceDetailScreen() {
             )}
             
             {(!appliedTags.length && !device.forcedTags?.length && !device.invalidTags?.length) && (
-              <Text className="text-slate-400 text-center py-4">No tags assigned</Text>
+              <Text className="text-center py-4" style={{ color: colors.textMuted }}>No tags assigned</Text>
             )}
           </View>
 
           {/* Pre-Auth Key Info */}
           {device.preAuthKey && (
-            <View className="bg-zinc-800 rounded-xl p-4 mb-4 border border-zinc-700">
-              <Text className="text-white text-lg font-semibold mb-4">Pre-Auth Key</Text>
+            <View className="rounded-xl p-4 mb-4 border" style={{ backgroundColor: colors.surface, borderColor: colors.border }}>
+              <Text className="text-lg font-semibold mb-4" style={{ color: colors.text }}>Pre-Auth Key</Text>
               <InfoRow label="Key ID" value={device.preAuthKey.id} />
               <InfoRow label="Key" value={device.preAuthKey.key} copyable />
               <InfoRow label="Reusable" value={device.preAuthKey.reusable ? "Yes" : "No"} />
@@ -361,14 +363,14 @@ export default function DeviceDetailScreen() {
           )}
 
           {/* Actions */}
-          <View className="bg-zinc-800 rounded-xl p-4 mb-6 border border-zinc-700">
-            <Text className="text-white text-lg font-semibold mb-4">Actions</Text>
+          <View className="rounded-xl p-4 mb-6 border" style={{ backgroundColor: colors.surface, borderColor: colors.border }}>
+            <Text className="text-lg font-semibold mb-4" style={{ color: colors.text }}>Actions</Text>
             <TouchableOpacity 
-              className="bg-red-600 py-3 rounded-lg flex-row items-center justify-center"
+              className="py-3 rounded-lg flex-row items-center justify-center" style={{ backgroundColor: colors.error }}
               onPress={handleDeleteWithNavigation}
             >
-              <MaterialIcons name="delete" size={20} color="white" />
-              <Text className="text-white font-semibold ml-2">Delete Device</Text>
+              <MaterialIcons name="delete" size={20} color={colors.onPrimary} />
+              <Text className="font-semibold ml-2" style={{ color: colors.onPrimary }}>Delete Device</Text>
             </TouchableOpacity>
           </View>
         </View>
