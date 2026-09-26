@@ -1,4 +1,5 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { normalizeApiKey } from "./apiKeyUtils";
 
 export async function getServerConfig() {
   const selectedName = await AsyncStorage.getItem("selectedServer");
@@ -8,8 +9,12 @@ export async function getServerConfig() {
 
   try {
     const servers = JSON.parse(serversJson);
-    const config = servers.find(s => s.name === selectedName);
-    return config || null;
+    const config = servers.find((s: { name: string }) => s.name === selectedName);
+    if (!config) return null;
+    return {
+      ...config,
+      apiKey: normalizeApiKey(config.apiKey ?? ""),
+    };
   } catch (err) {
     console.error("Error parsing server config:", err);
     return null;

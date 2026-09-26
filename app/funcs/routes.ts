@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import { getServerRoutes, disableRoute, enableRoute } from "../api/routes";
 import Toast from "react-native-toast-message";
 
@@ -9,7 +9,7 @@ export function useRoutes() {
   const [routes, setRoutes] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
-  const fetchRoutes = async () => {
+  const fetchRoutes = useCallback(async () => {
     try {
       const data = await getServerRoutes();
       if (data?.routes) {
@@ -22,7 +22,7 @@ export function useRoutes() {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
 
   const handleDisableRoute = async (routeid: string) => {

@@ -36,8 +36,8 @@ export async function deleteUser(userNameOrId: string | number) {
   const config = await getApiEndpoints();
   if (!config) return null;
 
-  const { endpoints, serverConf } = config;
-    
+  const { endpoints } = config;
+
   const apiCall = endpoints.users.deleteUser(userNameOrId);
   
   return await makeApiRequest(apiCall.url, {
@@ -49,8 +49,8 @@ export async function renameUser(oldNameOrId: string | number, newName: string) 
   const config = await getApiEndpoints();
   if (!config) return null;
 
-  const { endpoints, serverConf } = config;
-    
+  const { endpoints } = config;
+
   const apiCall = endpoints.users.renameUser(oldNameOrId, newName);
   
   return await makeApiRequest(apiCall.url, {

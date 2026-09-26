@@ -3,7 +3,6 @@ import {
   Text,
   View,
   ScrollView,
-  ActivityIndicator,
   TouchableOpacity,
   Alert,
   RefreshControl,
@@ -11,12 +10,16 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { MaterialIcons } from "@expo/vector-icons";
 import { useRoutes } from "@/app/funcs/routes";
+import { ScreenLoading } from "@/app/components/ScreenLoading";
+import { useTheme } from "@/theme";
 
 function formatDate(dateString: string) {
   return new Date(dateString).toLocaleString();
 }
 
 export default function RoutesScreen() {
+  const { theme } = useTheme();
+  const { colors } = theme;
   const {
     handleDisableRoute,
     handleEnableRoute,
@@ -31,40 +34,33 @@ export default function RoutesScreen() {
 
   useEffect(() => {
     fetchRoutes();
-  }, []);
+  }, [fetchRoutes]);
 
   if (loading) {
     return (
-      <SafeAreaView edges={["top", "left", "right"]} className="flex-1 bg-zinc-900 justify-center items-center">
-        <ActivityIndicator size="large" color="#fff" />
-        <Text className="text-white mt-4">Loading Routes...</Text>
+      <SafeAreaView edges={["top", "left", "right"]} className="flex-1" style={{ backgroundColor: colors.background }}>
+        <ScreenLoading label="Loading Routes..." />
       </SafeAreaView>
     );
   }
 
   return (
-    <SafeAreaView edges={["top", "left", "right"]} className="flex-1 bg-zinc-900">
-      {loading ? (
-        <View className="flex-1 justify-center items-center">
-          <ActivityIndicator size="large" color="#fff" />
-          <Text className="text-white mt-4">Loading Routes...</Text>
-        </View>
-      ) : (
+    <SafeAreaView edges={["top", "left", "right"]} className="flex-1" style={{ backgroundColor: colors.background }}>
       <ScrollView
         className="flex-1 px-4 pt-4"
         refreshControl={
-          <RefreshControl refreshing={loading} onRefresh={onRefresh} />
+          <RefreshControl refreshing={loading} onRefresh={onRefresh} tintColor={colors.primary} colors={[colors.primary]} />
         }
       >
-        <View className="mb-4 flex-row justify-end items-center">
-
-          <TouchableOpacity onPress={fetchRoutes}>
-            <MaterialIcons name="refresh" size={24} color="white" />
+        <View className="mb-4 flex-row justify-between items-center">
+          <Text className="text-2xl font-bold" style={{ color: colors.text }}>Routes</Text>
+          <TouchableOpacity onPress={fetchRoutes} activeOpacity={0.7}>
+            <MaterialIcons name="refresh" size={24} color={colors.text} />
           </TouchableOpacity>
         </View>
 
         {routes.length === 0 && (
-          <Text className="text-slate-300 text-center mt-10">
+          <Text className="text-center mt-10" style={{ color: colors.textSecondary }}>
             No routes found.
           </Text>
         )}
@@ -72,50 +68,54 @@ export default function RoutesScreen() {
         {routes.map((route: any) => (
           <View
             key={route.id}
-            className={`bg-zinc-800 p-4 rounded-xl mb-4 border ${route.enabled ? "border-green-500" : "border-zinc-700"
-              }`}
+            className="p-4 rounded-xl mb-4 border"
+            style={{
+              backgroundColor: colors.surface,
+              borderColor: route.enabled ? colors.success : colors.border,
+            }}
           >
-            <Text className="text-white text-lg font-semibold mb-2">
+            <Text className="text-lg font-semibold mb-2" style={{ color: colors.text }}>
               {route.prefix}
             </Text>
 
             <View className="flex-row justify-between mb-1">
-              <Text className="text-slate-300">Advertised:</Text>
-              <Text className="text-slate-100 font-semibold">
+              <Text style={{ color: colors.textSecondary }}>Advertised:</Text>
+              <Text className="font-semibold" style={{ color: colors.text }}>
                 {route.advertised ? "✅ Yes" : "❌ No"}
               </Text>
             </View>
 
             <View className="flex-row justify-between mb-1">
-              <Text className="text-slate-300">Enabled:</Text>
-              <Text className="text-slate-100 font-semibold">
+              <Text style={{ color: colors.textSecondary }}>Enabled:</Text>
+              <Text className="font-semibold" style={{ color: colors.text }}>
                 {route.enabled ? "✅ Yes" : "❌ No"}
               </Text>
             </View>
 
             <View className="flex-row justify-between mb-1">
-              <Text className="text-slate-300">Primary:</Text>
-              <Text className="text-slate-100 font-semibold">
+              <Text style={{ color: colors.textSecondary }}>Primary:</Text>
+              <Text className="font-semibold" style={{ color: colors.text }}>
                 {route.isPrimary ? "🌟 Primary" : "—"}
               </Text>
             </View>
 
             <View className="flex-row justify-between mb-1">
-              <Text className="text-slate-300">Created:</Text>
-              <Text className="text-slate-100">
+              <Text style={{ color: colors.textSecondary }}>Created:</Text>
+              <Text style={{ color: colors.text }}>
                 {formatDate(route.createdAt)}
               </Text>
             </View>
 
             <View className="flex-row justify-between mb-1">
-              <Text className="text-slate-300">Updated:</Text>
-              <Text className="text-slate-100">
+              <Text style={{ color: colors.textSecondary }}>Updated:</Text>
+              <Text style={{ color: colors.text }}>
                 {formatDate(route.updatedAt)}
               </Text>
             </View>
 
             <View className="flex-row justify-end gap-4 mt-4">
               <TouchableOpacity
+                activeOpacity={0.7}
                 onPress={() =>
                   Alert.alert(
                     "Enable Route",
@@ -131,9 +131,10 @@ export default function RoutesScreen() {
                   )
                 }
               >
-                <MaterialIcons name="check-box" size={20} color="#60a5fa" />
+                <MaterialIcons name="check-box" size={20} color={colors.primaryMuted} />
               </TouchableOpacity>
               <TouchableOpacity
+                activeOpacity={0.7}
                 onPress={() =>
                   Alert.alert(
                     "Disable Route",
@@ -149,13 +150,12 @@ export default function RoutesScreen() {
                   )
                 }
               >
-                <MaterialIcons name="disabled-by-default" size={20} color="#f87171" />
+                <MaterialIcons name="disabled-by-default" size={20} color={colors.error} />
               </TouchableOpacity>
             </View>
           </View>
         ))}
       </ScrollView>
-      )}
     </SafeAreaView>
   );
 }

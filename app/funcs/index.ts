@@ -1,11 +1,13 @@
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useRouter } from "expo-router";
 import Toast from "react-native-toast-message";
-import { testAPIKey } from "../api/login";
+import { testAPIKeyDetailed } from "../api/login";
+import { normalizeApiKey } from "../utils/apiKeyUtils";
 import { parseVersion } from "../utils/getServer";
+import { isInsecureHttpUrl, useHttpRiskAck } from "../components/HttpInsecureWarning";
 
-export type HeadscaleVersion = "0.23.x" | "0.24.x" | "0.25.x" | "0.26.x" | "0.27.x" | "0.28.x";
+export type HeadscaleVersion = "0.23.x" | "0.24.x" | "0.25.x" | "0.26.x" | "0.27.x" | "0.28.x" | "0.29.x";
 
 export function useLogin() {
   const router = useRouter();
@@ -13,48 +15,72 @@ export function useLogin() {
   const [customName, setCustomName] = useState("");
   const [server, setServer] = useState("");
   const [apiKey, setApiKey] = useState("");
-  const [headscaleVersion, setHeadscaleVersion] = useState<HeadscaleVersion>("0.26.x");
+  const [headscaleVersion, setHeadscaleVersion] = useState<HeadscaleVersion>("0.29.x");
   const [showInfo, setShowInfo] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const httpRisk = useHttpRiskAck(server);
 
   // Toggle info display - close if same item clicked, open if different
   const toggleInfo = (field: string) => {
     setShowInfo(showInfo === field ? null : field);
   };
 
-  const checkForPreviousKey = async () => {
+  const checkForPreviousKey = useCallback(async () => {
     setLoading(true);
     const selectedName = await AsyncStorage.getItem("selectedServer");
     const serversJson = await AsyncStorage.getItem("servers");
 
-    if (!selectedName || !serversJson) {
+    if (!serversJson) {
       setLoading(false);
       return;
     }
 
-    const servers = JSON.parse(serversJson);
-    const selected = servers.find(s => s.name === selectedName);
-
-    if (!selected) {
+    let servers: { name: string; server: string; apiKey: string }[] = [];
+    try {
+      servers = JSON.parse(serversJson);
+    } catch (e) {
+      console.warn("Failed to parse saved servers:", e);
       setLoading(false);
       return;
     }
 
-    const isValid = await testAPIKey(selected.server, selected.apiKey);
+    if (!Array.isArray(servers) || servers.length === 0) {
+      setLoading(false);
+      return;
+    }
 
-    if (isValid) {
+    // Try the selected server first, then the rest of the saved list.
+    const ordered = selectedName
+      ? [
+          ...servers.filter((s) => s.name === selectedName),
+          ...servers.filter((s) => s.name !== selectedName),
+        ]
+      : servers;
+
+    for (const candidate of ordered) {
+      const result = await testAPIKeyDetailed(candidate.server, candidate.apiKey);
+      if (!result.ok) continue;
+
+      const fellBack = Boolean(selectedName) && candidate.name !== selectedName;
+      if (candidate.name !== selectedName) {
+        await AsyncStorage.setItem("selectedServer", candidate.name);
+      }
+
       Toast.show({
-        type: "success",
+        type: fellBack ? "info" : "success",
         position: "top",
-        text1: "✅ Connected",
-        text2: `Connected to ${selected.name}.`,
+        text1: fellBack ? "Switched server" : "✅ Connected",
+        text2: fellBack
+          ? `"${selectedName}" failed the connection test. Connected to ${candidate.name}.`
+          : `Connected to ${candidate.name}.`,
       });
       setLoading(false);
       router.push("/(tabs)");
-    } else {
-      setLoading(false);
+      return;
     }
-  };
+
+    setLoading(false);
+  }, [router]);
 
   const handleLogin = async () => {
     if (!server || !apiKey || !customName) {
@@ -76,21 +102,36 @@ export function useLogin() {
       });
       return;
     }
-    
-    let isValid = false
-    // temp for apple login demo, will do nothing
-    if (server === "https://appledemo.login.ieouiudhmpac.com" && apiKey === "WlEB2D3t4fdash89LQW65KDsaD9oq0d2npso78uJolmOod2jp7"){
-      isValid = true
-    } else {
-      isValid = await testAPIKey(server, apiKey);
-    }
 
-    if (!isValid) {
+    if (isInsecureHttpUrl(server) && !httpRisk.canProceed) {
       Toast.show({
         type: "error",
         position: "top",
-        text1: "⚠️ Invalid API Key",
-        text2: "Check your API key and try again.",
+        text1: "HTTP confirmation required",
+        text2: "Confirm you understand the risk before sending your API token over HTTP.",
+      });
+      return;
+    }
+
+    const normalizedKey = normalizeApiKey(apiKey);
+
+    let authResult: Awaited<ReturnType<typeof testAPIKeyDetailed>>;
+    // temp for apple login demo, will do nothing
+    if (
+      server === "https://appledemo.login.ieouiudhmpac.com" &&
+      normalizedKey === "WlEB2D3t4fdash89LQW65KDsaD9oq0d2npso78uJolmOod2jp7"
+    ) {
+      authResult = { ok: true };
+    } else {
+      authResult = await testAPIKeyDetailed(server, normalizedKey);
+    }
+
+    if (!authResult.ok) {
+      Toast.show({
+        type: "error",
+        position: "top",
+        text1: "⚠️ Connection Failed",
+        text2: authResult.message || "Check your API key and try again.",
       });
       return;
     }
@@ -104,7 +145,7 @@ export function useLogin() {
     const newEntry = {
       name: customName.trim(),
       server: server.trim(),
-      apiKey: apiKey.trim(),
+      apiKey: normalizedKey,
       addedOn: new Date().toISOString(),
       version: parseVersion(headscaleVersion)
     };
@@ -120,7 +161,7 @@ export function useLogin() {
     }
 
     const updated = [
-      ...parsed.filter((item) => item.name !== newEntry.name),
+      ...parsed.filter((item: { name: string }) => item.name !== newEntry.name),
       newEntry,
     ];
 
@@ -143,5 +184,6 @@ export function useLogin() {
     loading,
     checkForPreviousKey,
     handleLogin,
+    httpRisk,
   };
 }

@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Alert } from "react-native";
 import Toast from "react-native-toast-message";
 import { Device, User } from "../types";
@@ -8,8 +8,20 @@ import { updateRoute } from "../api/routes";
 import { getVersionInfo } from "../utils/deviceUtils";
 import { isV028OrHigher } from "../utils/headscaleVersion";
 
+function parseDeviceParam(deviceData: string | undefined): Device | null {
+  if (!deviceData) return null;
+  try {
+    return JSON.parse(deviceData) as Device;
+  } catch (error) {
+    console.error("Failed to parse device data:", error);
+    return null;
+  }
+}
+
 export function useDeviceDetail(deviceData: string | undefined) {
-  const [device, setDevice] = useState<Device | null>(null);
+  const parsedDevice = parseDeviceParam(deviceData);
+  const [device, setDevice] = useState<Device | null>(parsedDevice);
+  const [loadedFrom, setLoadedFrom] = useState(deviceData);
   const [users, setUsers] = useState<User[]>([]);
   const [editingField, setEditingField] = useState<string | null>(null);
   const [tempValue, setTempValue] = useState<string>("");
@@ -18,26 +30,14 @@ export function useDeviceDetail(deviceData: string | undefined) {
   const [showRoutesModal, setShowRoutesModal] = useState(false);
   const [selectedRoutes, setSelectedRoutes] = useState<string[]>([]);
   const [newTags, setNewTags] = useState("");
+  const [canChangeUser, setCanChangeUser] = useState(true);
 
-  useEffect(() => {
-    if (deviceData) {
-      try {
-        const parsedDevice: Device = JSON.parse(deviceData);
-        setDevice(parsedDevice);
-        loadUsers();
-      } catch (error) {
-        console.error("Failed to parse device data:", error);
-        Toast.show({
-          type: "error",
-          position: "top",
-          text1: "⚠️ Data Error",
-          text2: "Failed to load device data",
-        });
-      }
-    }
-  }, [deviceData]);
+  if (deviceData !== loadedFrom) {
+    setLoadedFrom(deviceData);
+    setDevice(parsedDevice);
+  }
 
-  const loadUsers = async () => {
+  const loadUsers = useCallback(async () => {
     try {
       const usersData = await getUsers();
       if (usersData?.users) {
@@ -46,7 +46,32 @@ export function useDeviceDetail(deviceData: string | undefined) {
     } catch (error) {
       console.error("Failed to load users:", error);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    if (!deviceData) return;
+    if (!parseDeviceParam(deviceData)) {
+      Toast.show({
+        type: "error",
+        position: "top",
+        text1: "⚠️ Data Error",
+        text2: "Failed to load device data",
+      });
+      return;
+    }
+
+    const handle = setTimeout(() => {
+      void loadUsers();
+      void (async () => {
+        const versionInfo = await getVersionInfo();
+        if (versionInfo?.versionKey) {
+          setCanChangeUser(!isV028OrHigher(versionInfo.versionKey.replace(/^v/, "")));
+        }
+      })();
+    }, 0);
+
+    return () => clearTimeout(handle);
+  }, [deviceData, loadUsers]);
 
   const handleRename = async () => {
     if (!device || !tempValue.trim()) return;
@@ -386,5 +411,6 @@ export function useDeviceDetail(deviceData: string | undefined) {
     handleApproveRoutes,
     handleRemoveRoute,
     handleDelete,
+    canChangeUser,
   };
 }

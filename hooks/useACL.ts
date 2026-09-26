@@ -1,6 +1,8 @@
 import { useState, useEffect, useCallback } from "react";
 import { Alert } from "react-native";
-import { getACLPolicy, updateACLPolicy } from "@/app/api/acl";
+import { checkACLPolicy, getACLPolicy, updateACLPolicy } from "@/app/api/acl";
+import { getApiEndpoints } from "@/app/utils/apiUtils";
+import { isV029OrHigher } from "@/app/utils/headscaleVersion";
 
 interface PolicyVersion {
   id: string;
@@ -21,6 +23,7 @@ interface ACLHookReturn {
   showSetupGuide: boolean;
   showErrorModal: boolean;
   currentError: any;
+  serverVersion: string;
 
   // Actions
   fetchPolicy: () => Promise<void>;
@@ -40,7 +43,6 @@ interface ACLHookReturn {
 }
 
 export const useACL = (): ACLHookReturn => {
-  // State management
   const [policy, setPolicy] = useState<string>("");
   const [originalPolicy, setOriginalPolicy] = useState<string>("");
   const [loading, setLoading] = useState(false);
@@ -52,22 +54,26 @@ export const useACL = (): ACLHookReturn => {
   const [showSetupGuide, setShowSetupGuide] = useState(false);
   const [showErrorModal, setShowErrorModal] = useState(false);
   const [currentError, setCurrentError] = useState<any>(null);
+  const [serverVersion, setServerVersion] = useState("");
 
-  // Fetch policy function
   const fetchPolicy = useCallback(async () => {
     try {
       setLoading(true);
+      const config = await getApiEndpoints();
+      if (config?.serverConf?.version) {
+        setServerVersion(config.serverConf.version);
+      }
+
       const response = await getACLPolicy();
       console.log('Fetch response:', response);
       
       if (response && "policy" in response) {
         let formattedPolicy = response.policy;
         
-        // Parse and format JSON properly
         try {
           const parsedPolicy = JSON.parse(formattedPolicy);
           formattedPolicy = JSON.stringify(parsedPolicy, null, 2);
-        } catch (e) {
+        } catch {
           formattedPolicy = formattedPolicy.replace(/\\n/g, '\n');
         }
         
@@ -79,7 +85,6 @@ export const useACL = (): ACLHookReturn => {
     } catch (error: any) {
       console.error("Error fetching policy:", error);
       
-      // Check for specific errors and show error modal
       const errorMessage = error?.message || error?.toString() || '';
       
       if (errorMessage.includes('acl policy not found') || 
@@ -102,7 +107,6 @@ export const useACL = (): ACLHookReturn => {
         return;
       }
       
-      // Generic error
       setCurrentError({ message: errorMessage });
       Alert.alert("Error", "Failed to fetch ACL policy. Check your connection.");
     } finally {
@@ -110,13 +114,11 @@ export const useACL = (): ACLHookReturn => {
     }
   }, []);
 
-  // Save policy function
   const savePolicy = useCallback(async () => {
     try {
       setSaving(true);
       console.log("Saving policy:", editText);
       
-      // Validate JSON
       let parsedPolicy;
       try {
         parsedPolicy = JSON.parse(editText);
@@ -126,24 +128,36 @@ export const useACL = (): ACLHookReturn => {
         return;
       }
 
-      // Save current version to history
+      if (isV029OrHigher(serverVersion)) {
+        const checkResult = await checkACLPolicy(editText);
+        if (
+          checkResult &&
+          !checkResult.skipped &&
+          (checkResult.error || (checkResult.code !== undefined && checkResult.code >= 400))
+        ) {
+          Alert.alert(
+            "Policy Check Failed",
+            checkResult.message ||
+              "Headscale rejected this policy (ACL/grants/tests validation). Fix the errors and try again.",
+          );
+          return;
+        }
+      }
+
       if (policy) {
         const newVersion: PolicyVersion = {
           id: Date.now().toString(),
           policy: policy,
           timestamp: new Date(),
         };
-        setPolicyVersions(prev => [newVersion, ...prev].slice(0, 20)); // Keep last 20 versions
+        setPolicyVersions(prev => [newVersion, ...prev].slice(0, 20));
       }
 
-      // Update the policy
       const response = await updateACLPolicy(parsedPolicy);
       
-      // Check if response shows an error
       if (response && response.code) {
         let errorMessage = '';
         
-        // Check if it's a server error response
         if (response.code !== undefined && response.message) {
           errorMessage = `Server Error (Code ${response.code}): ${response.message}`;
         } else if (response.error) {
@@ -159,7 +173,6 @@ export const useACL = (): ACLHookReturn => {
         }
       }
       
-      // Check if response is successful
       if (response && !response.error && !response.code) {
         setPolicy(editText);
         setOriginalPolicy(editText);
@@ -188,15 +201,13 @@ export const useACL = (): ACLHookReturn => {
     } finally {
       setSaving(false);
     }
-  }, [editText, policy]);
+  }, [editText, policy, serverVersion]);
 
-  // Start editing function
   const startEditing = useCallback(() => {
     setEditText(policy);
     setEditing(true);
   }, [policy]);
 
-  // Cancel editing function
   const cancelEditing = useCallback(() => {
     if (editText !== policy) {
       Alert.alert(
@@ -220,7 +231,6 @@ export const useACL = (): ACLHookReturn => {
     }
   }, [editText, policy]);
 
-  // Restore version function
   const restoreVersion = useCallback((version: PolicyVersion) => {
     Alert.alert(
       "Restore Policy Version?",
@@ -239,7 +249,6 @@ export const useACL = (): ACLHookReturn => {
     );
   }, []);
 
-  // Delete version function
   const deleteVersion = useCallback((versionId: string) => {
     Alert.alert(
       "Delete Version",
@@ -257,18 +266,18 @@ export const useACL = (): ACLHookReturn => {
     );
   }, []);
 
-  // Refresh function
   const onRefresh = useCallback(() => {
     fetchPolicy();
   }, [fetchPolicy]);
 
-  // Initialize on mount
   useEffect(() => {
-    fetchPolicy();
+    const handle = setTimeout(() => {
+      void fetchPolicy();
+    }, 0);
+    return () => clearTimeout(handle);
   }, [fetchPolicy]);
 
   return {
-    // State
     policy,
     originalPolicy,
     loading,
@@ -280,8 +289,7 @@ export const useACL = (): ACLHookReturn => {
     showSetupGuide,
     showErrorModal,
     currentError,
-
-    // Actions
+    serverVersion,
     fetchPolicy,
     savePolicy,
     startEditing,
@@ -289,8 +297,6 @@ export const useACL = (): ACLHookReturn => {
     restoreVersion,
     deleteVersion,
     onRefresh,
-
-    // Modal controls
     setShowVersions,
     setShowSetupGuide,
     setShowErrorModal,
@@ -298,4 +304,3 @@ export const useACL = (): ACLHookReturn => {
     setEditText,
   };
 };
-

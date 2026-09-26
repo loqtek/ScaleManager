@@ -12,6 +12,8 @@ import {
   Keyboard,
 } from "react-native";
 import Toast from "react-native-toast-message";
+import { isV029OrHigher } from "../utils/headscaleVersion";
+import { useTheme } from "@/theme";
 
 interface RegisterDeviceModalProps {
   visible: boolean;
@@ -22,6 +24,9 @@ interface RegisterDeviceModalProps {
   deviceKey: string;
   onKeyChange: (key: string) => void;
   onRegister: () => void;
+  serverVersion?: string;
+  onApprove?: () => void;
+  onReject?: () => void;
 }
 
 export const RegisterDeviceModal: React.FC<RegisterDeviceModalProps> = ({
@@ -33,9 +38,16 @@ export const RegisterDeviceModal: React.FC<RegisterDeviceModalProps> = ({
   deviceKey,
   onKeyChange,
   onRegister,
+  serverVersion,
+  onApprove,
+  onReject,
 }) => {
+  const { theme } = useTheme();
+  const { colors } = theme;
+  const isV029 = isV029OrHigher(serverVersion);
+
   const handleRegister = () => {
-    if (!selectedUser) {
+    if (!selectedUser && !/headscale\s+auth\s+(approve|reject)/i.test(deviceKey)) {
       Toast.show({
         type: "error",
         position: "top",
@@ -48,8 +60,10 @@ export const RegisterDeviceModal: React.FC<RegisterDeviceModalProps> = ({
       Toast.show({
         type: "error",
         position: "top",
-        text1: "⚠️ No Key",
-        text2: "Please enter a device key",
+        text1: isV029 ? "⚠️ No Auth ID" : "⚠️ No Key",
+        text2: isV029
+          ? "Enter an auth ID or paste a headscale auth command"
+          : "Please enter a device key",
       });
       return;
     }
@@ -64,95 +78,132 @@ export const RegisterDeviceModal: React.FC<RegisterDeviceModalProps> = ({
       onRequestClose={onClose}
     >
       <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
-        <View className="flex-1 justify-center items-center px-4 bg-black/20">
+        <View className="flex-1 justify-center items-center px-4" style={{ backgroundColor: colors.overlay }}>
           <KeyboardAvoidingView
             behavior={Platform.OS === "ios" ? "padding" : undefined}
             className="w-full max-w-md"
           >
-            <View className="bg-zinc-800 rounded-xl p-6">
-              <Text className="text-white text-xl font-bold mb-4 text-center">
-                Register Device
+            <View className="rounded-xl p-6" style={{ backgroundColor: colors.surface }}>
+              <Text className="text-xl font-bold mb-2 text-center" style={{ color: colors.text }}>
+                {isV029 ? "Register / Auth" : "Register Device"}
               </Text>
+              {isV029 && (
+                <Text className="text-xs text-center mb-4" style={{ color: colors.textMuted }}>
+                  v0.29 uses auth IDs. Paste an auth ID or a full{" "}
+                  <Text className="font-mono" style={{ color: colors.textSecondary }}>headscale auth …</Text>{" "}
+                  command.
+                </Text>
+              )}
 
-              {/* User Selection */}
-              <Text className="text-slate-300 text-sm mb-2">Select User:</Text>
+              <Text className="text-sm mb-2" style={{ color: colors.textSecondary }}>Select User:</Text>
               {users.length > 0 ? (
                 <ScrollView
-                  className="max-h-40 mb-4"
+                  className="max-h-60 mb-4"
                   keyboardShouldPersistTaps="handled"
                 >
-                  {users.map((user) => (
-                    <TouchableOpacity
-                      key={user.id}
-                      onPress={() => onSelectUser(user)}
-                      className={`p-3 rounded-lg mb-2 ${
-                        selectedUser?.id === user.id
-                          ? "bg-blue-600"
-                          : "bg-zinc-700"
-                      }`}
-                    >
-                      <Text
-                        className={`font-medium ${
-                          selectedUser?.id === user.id
-                            ? "text-white"
-                            : "text-slate-300"
-                        }`}
+                  {users.map((user) => {
+                    const selected = selectedUser?.id === user.id;
+                    return (
+                      <TouchableOpacity
+                        key={user.id}
+                        onPress={() => onSelectUser(user)}
+                        activeOpacity={0.8}
+                        className="p-3 rounded-lg mb-2"
+                        style={{ backgroundColor: selected ? colors.primary : colors.surfaceMuted }}
                       >
-                        {user.name}
-                      </Text>
-                      <Text
-                        className={`text-xs ${
-                          selectedUser?.id === user.id
-                            ? "text-blue-200"
-                            : "text-slate-400"
-                        }`}
-                      >
-                        ID: {user.id}
-                      </Text>
-                    </TouchableOpacity>
-                  ))}
+                        <Text className="font-medium" style={{ color: selected ? colors.onPrimary : colors.textSecondary }}>
+                          {user.name}
+                        </Text>
+                        <Text className="text-xs" style={{ color: selected ? colors.onPrimary : colors.textMuted }}>
+                          ID: {user.id}
+                        </Text>
+                      </TouchableOpacity>
+                    );
+                  })}
                 </ScrollView>
               ) : (
-                <View className="bg-zinc-700 rounded-lg p-3 mb-4">
-                  <Text className="text-slate-400 text-sm text-center">
+                <View className="rounded-lg p-3 mb-4" style={{ backgroundColor: colors.surfaceMuted }}>
+                  <Text className="text-sm text-center" style={{ color: colors.textMuted }}>
                     No users available. Please add a user first.
                   </Text>
                 </View>
               )}
 
-              {/* Key Input */}
-              <Text className="text-slate-300 text-sm mb-2">Device Key:</Text>
+              <Text className="text-sm mb-2" style={{ color: colors.textSecondary }}>
+                {isV029 ? "Auth ID or command:" : "Device Key:"}
+              </Text>
               <TextInput
-                className="bg-zinc-700 text-white p-3 rounded-lg mb-4"
-                placeholder="Enter pre-auth key or full headscale command"
-                placeholderTextColor="#94a3b8"
+                className="p-3 rounded-lg mb-2"
+                style={{ backgroundColor: colors.surfaceMuted, color: colors.text }}
+                placeholder={
+                  isV029
+                    ? "auth-id or: headscale auth register --user … --auth-id …"
+                    : "Enter key or full headscale nodes register command"
+                }
+                placeholderTextColor={colors.textMuted}
                 value={deviceKey}
                 onChangeText={onKeyChange}
                 multiline
                 autoCapitalize="none"
                 autoCorrect={false}
               />
+              {isV029 && (
+                <Text className="text-xs mb-4" style={{ color: colors.muted }}>
+                  Examples:{"\n"}
+                  headscale auth register --user alice --auth-id …{"\n"}
+                  headscale auth approve --auth-id …{"\n"}
+                  headscale auth reject --auth-id …
+                </Text>
+              )}
 
-              {/* Buttons */}
-              <View className="flex-row space-x-3">
+              <View className="flex-row space-x-3 mb-3">
                 <TouchableOpacity
                   onPress={onClose}
-                  className="flex-1 bg-zinc-600 py-3 rounded-lg"
+                  activeOpacity={0.8}
+                  className="flex-1 py-3 rounded-lg"
+                  style={{ backgroundColor: colors.secondary }}
                 >
-                  <Text className="text-white text-center font-medium">
+                  <Text className="text-center font-medium" style={{ color: colors.onSecondary }}>
                     Cancel
                   </Text>
                 </TouchableOpacity>
 
                 <TouchableOpacity
                   onPress={handleRegister}
-                  className="flex-1 bg-blue-600 py-3 rounded-lg"
+                  activeOpacity={0.8}
+                  className="flex-1 py-3 rounded-lg"
+                  style={{ backgroundColor: colors.primary }}
                 >
-                  <Text className="text-white text-center font-medium">
+                  <Text className="text-center font-medium" style={{ color: colors.onPrimary }}>
                     Register
                   </Text>
                 </TouchableOpacity>
               </View>
+
+              {isV029 && onApprove && onReject && (
+                <View className="flex-row space-x-3">
+                  <TouchableOpacity
+                    onPress={onApprove}
+                    activeOpacity={0.8}
+                    className="flex-1 py-3 rounded-lg"
+                    style={{ backgroundColor: colors.success }}
+                  >
+                    <Text className="text-center font-medium" style={{ color: colors.onPrimary }}>
+                      Approve
+                    </Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    onPress={onReject}
+                    activeOpacity={0.8}
+                    className="flex-1 py-3 rounded-lg"
+                    style={{ backgroundColor: colors.error }}
+                  >
+                    <Text className="text-center font-medium" style={{ color: colors.onPrimary }}>
+                      Reject
+                    </Text>
+                  </TouchableOpacity>
+                </View>
+              )}
             </View>
           </KeyboardAvoidingView>
         </View>
@@ -160,4 +211,3 @@ export const RegisterDeviceModal: React.FC<RegisterDeviceModalProps> = ({
     </Modal>
   );
 };
-

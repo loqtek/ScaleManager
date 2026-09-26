@@ -1,6 +1,7 @@
 import React from "react";
 import { Modal, View, Text, TouchableOpacity, ScrollView } from "react-native";
 import { User } from "../types";
+import { useTheme } from "@/theme";
 
 interface UserSelectionModalProps {
   visible: boolean;
@@ -15,30 +16,37 @@ export const UserSelectionModal: React.FC<UserSelectionModalProps> = ({
   users,
   onSelectUser,
 }) => {
+  const { theme } = useTheme();
+  const { colors } = theme;
+
   return (
     <Modal visible={visible} transparent animationType="slide">
-      <View className="flex-1 justify-center items-center bg-black/20">
-        <View className="bg-zinc-800 rounded-xl p-4 w-4/5 max-h-96">
-          <Text className="text-white text-lg font-semibold mb-4">Select User</Text>
+      <View className="flex-1 justify-center items-center" style={{ backgroundColor: colors.overlay }}>
+        <View className="rounded-xl p-4 w-4/5 max-h-96" style={{ backgroundColor: colors.surface }}>
+          <Text className="text-lg font-semibold mb-4" style={{ color: colors.text }}>Select User</Text>
           <ScrollView>
             {users.map((user) => (
               <TouchableOpacity
                 key={user.id}
                 onPress={() => onSelectUser(user.name)}
-                className="py-3 border-b border-zinc-700"
+                activeOpacity={0.7}
+                className="py-3 border-b"
+                style={{ borderBottomColor: colors.border }}
               >
-                <Text className="text-white">{user.name}</Text>
+                <Text style={{ color: colors.text }}>{user.name}</Text>
                 {user.displayName && (
-                  <Text className="text-slate-400 text-sm">{user.displayName}</Text>
+                  <Text className="text-sm" style={{ color: colors.textMuted }}>{user.displayName}</Text>
                 )}
               </TouchableOpacity>
             ))}
           </ScrollView>
           <TouchableOpacity
             onPress={onClose}
-            className="bg-gray-600 py-2 rounded mt-4"
+            activeOpacity={0.8}
+            className="py-2 rounded mt-4"
+            style={{ backgroundColor: colors.secondary }}
           >
-            <Text className="text-white text-center">Cancel</Text>
+            <Text className="text-center" style={{ color: colors.onSecondary }}>Cancel</Text>
           </TouchableOpacity>
         </View>
       </View>

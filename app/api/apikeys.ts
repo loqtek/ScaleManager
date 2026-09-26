@@ -1,4 +1,5 @@
 import { getServerConfig } from "../utils/getServer";
+import { buildExpireApiKeyBody, normalizeApiKey } from "../utils/apiKeyUtils";
 import { fetchWithFallback } from "../utils/apiUtils";
   
 export async function getAPIKeys() {
@@ -11,7 +12,7 @@ export async function getAPIKeys() {
       }
 
       const server = serverConf.server;
-      const authKey = serverConf.apiKey;
+      const authKey = normalizeApiKey(serverConf.apiKey);
       
       const response = await fetchWithFallback(server, authKey, `/api/v1/apikey`, {
         method: 'GET',
@@ -41,7 +42,7 @@ export async function createAPIKey(expiration: string) {
       }
 
       const server = serverConf.server;
-      const authKey = serverConf.apiKey;
+      const authKey = normalizeApiKey(serverConf.apiKey);
       
       const response = await fetchWithFallback(server, authKey, `/api/v1/apikey`, {
         method: 'POST',
@@ -61,7 +62,8 @@ export async function createAPIKey(expiration: string) {
     }
 }
 
-export async function expireAPIKey(prefix: string) {
+/** Expire an API key by id (preferred on v0.28+) or listed prefix. */
+export async function expireAPIKey(key: { id?: number | string; prefix?: string }) {
     try {
       const serverConf = await getServerConfig();
       
@@ -71,11 +73,12 @@ export async function expireAPIKey(prefix: string) {
       }
 
       const server = serverConf.server;
-      const authKey = serverConf.apiKey;
+      const authKey = normalizeApiKey(serverConf.apiKey);
+      const body = buildExpireApiKeyBody(key);
       
       const response = await fetchWithFallback(server, authKey, `/api/v1/apikey/expire`, {
         method: 'POST',
-        body: JSON.stringify({ prefix }),
+        body: JSON.stringify(body),
       });
 
       if (!response.ok) {
@@ -90,4 +93,3 @@ export async function expireAPIKey(prefix: string) {
       return null;
     }
 }
-

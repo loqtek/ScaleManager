@@ -1,7 +1,7 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { getPreAuthKeys, createPreAuthKey, expirePreAuthKey } from "../api/preauthkeys";
 import { getUsers } from "../api/users";
-import { getApiEndpoints } from "../utils/apiUtils";
+import { getApiEndpoints, isApiSuccess } from "../utils/apiUtils";
 import { isV026OrHigher, isV028OrHigher } from "../utils/headscaleVersion";
 import Toast from "react-native-toast-message";
 import { calculateExpirationDate } from "../utils/time";
@@ -32,7 +32,7 @@ export const usePreAuthManager = () => {
     return user.name;
   };
 
-  const fetchData = async () => {
+  const fetchData = useCallback(async () => {
     try {
       const config = await getApiEndpoints();
       const detectedVersion = config?.serverConf?.version || '0.23.x';
@@ -81,11 +81,14 @@ export const usePreAuthManager = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
   useEffect(() => {
-    fetchData();
-  }, []);
+    const handle = setTimeout(() => {
+      void fetchData();
+    }, 0);
+    return () => clearTimeout(handle);
+  }, [fetchData]);
 
   const handleExpireKey = async (keyId: string, userName: string) => {
     // Find the user object to get the correct identifier
@@ -105,7 +108,7 @@ export const usePreAuthManager = () => {
     
     const result = await expirePreAuthKey(userIdentifier, keyId, apiVersion);
     
-    if (result) {
+    if (isApiSuccess(result)) {
       Toast.show({
         type: "success",
         position: "top",
@@ -168,7 +171,7 @@ export const usePreAuthManager = () => {
     
     const result = await createPreAuthKey(userIdentifier, expirationDate, reusable);
     
-    if (result) {
+    if (isApiSuccess(result)) {
       Toast.show({
         type: "success",
         position: "top",

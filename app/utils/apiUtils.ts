@@ -1,5 +1,6 @@
 import { getServerConfig } from "../utils/getServer";
 import { API_VERSION_MAP, ApiEndpoints } from "../config/apiVersions";
+import { normalizeApiKey } from "./apiKeyUtils";
 import { getVersionKey } from "./headscaleVersion";
 
 // Headscale's REST API uses singular resource names (e.g. /api/v1/node), but
@@ -57,14 +58,18 @@ export async function fetchWithFallback(
   const candidates = buildEndpointCandidates(path);
   let lastResponse: Response | null = null;
 
+  const token = normalizeApiKey(apiKey);
+
   for (const candidate of candidates) {
     const response = await fetch(`${server}${candidate}`, {
       ...options,
       headers: {
         Accept: "application/json",
-        Authorization: `Bearer ${apiKey}`,
         "Content-Type": "application/json",
         ...options.headers,
+        // Always win over caller headers so we never drop the Bearer scheme
+        // required by Headscale (missing "Bearer " is logged as an auth error).
+        Authorization: `Bearer ${token}`,
       },
     });
 
@@ -98,11 +103,21 @@ export async function getApiEndpoints(): Promise<{ endpoints: ApiEndpoints; serv
 
   const endpoints = API_VERSION_MAP[versionKey];
   if (!endpoints) {
-    console.warn(`No API endpoints found for version ${versionKey}, using default v0.26`);
-    return { endpoints: API_VERSION_MAP['v0.26'], serverConf };
+    console.warn(`No API endpoints found for version ${versionKey}, using default v0.29`);
+    return { endpoints: API_VERSION_MAP['v0.29'], serverConf };
   }
 
   return { endpoints, serverConf };
+}
+
+/** True when makeApiRequest / fetchWithFallback returned a successful result. */
+export function isApiSuccess(result: unknown): boolean {
+  if (result === null || result === undefined) return false;
+  if (typeof result !== "object") return true;
+  const r = result as Record<string, unknown>;
+  if (r.error === true) return false;
+  if (typeof r.code === "number" && r.code >= 400) return false;
+  return true;
 }
 
 // Helper function to make API requests
@@ -134,8 +149,10 @@ export async function makeApiRequest(url: string, options: RequestInit = {}) {
       }
     }
 
-    const data = await response.json();
-    return data;
+    const text = await response.text();
+    // Some endpoints (e.g. DELETE user) return 200 with an empty body.
+    if (!text) return {};
+    return JSON.parse(text);
   } catch (error) {
     console.error("Fetch error:", error);
     return null;

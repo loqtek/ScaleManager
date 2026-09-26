@@ -1,14 +1,19 @@
 import React, { useEffect, useState } from "react";
 import {
   Text, View, ScrollView, TouchableOpacity,
-  ActivityIndicator, RefreshControl, Modal, TextInput, Alert, Clipboard
+  RefreshControl, Modal, TextInput, Alert, Clipboard,
+  KeyboardAvoidingView, Platform, TouchableWithoutFeedback, Keyboard,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { MaterialIcons } from "@expo/vector-icons";
 import Toast from "react-native-toast-message";
 import { usePreAuthManager } from "@/app/funcs/preauthkeys";
+import { ScreenLoading } from "@/app/components/ScreenLoading";
+import { useTheme } from "@/theme";
 
 export default function PreAuthKeysScreen() {
+  const { theme } = useTheme();
+  const colors = theme.colors;
   const {
     users,
     preAuthKeys,
@@ -27,7 +32,7 @@ export default function PreAuthKeysScreen() {
 
   useEffect(() => {
     fetchData();
-  }, []);
+  }, [fetchData]);
 
   const copyToClipboard = async (text: string, label: string) => {
     try {
@@ -72,10 +77,10 @@ export default function PreAuthKeysScreen() {
   };
 
   const getKeyStatus = (key: any) => {
-    if (!key.used && !isExpired(key.expiration)) return { status: "Active", color: "text-green-400", bg: "bg-green-500/20" };
-    if (key.used) return { status: "Used", color: "text-blue-400", bg: "bg-blue-500/20" };
-    if (isExpired(key.expiration)) return { status: "Expired", color: "text-red-400", bg: "bg-red-500/20" };
-    return { status: "Unknown", color: "text-gray-400", bg: "bg-gray-500/20" };
+    if (!key.used && !isExpired(key.expiration)) return { status: "Active", color: colors.success, bg: colors.successSoft };
+    if (key.used) return { status: "Used", color: colors.primaryMuted, bg: colors.primarySoft };
+    if (isExpired(key.expiration)) return { status: "Expired", color: colors.error, bg: colors.errorSoft };
+    return { status: "Unknown", color: colors.muted, bg: colors.surfaceMuted };
   };
 
   const toggleUserExpansion = (userName: string) => {
@@ -130,12 +135,9 @@ export default function PreAuthKeysScreen() {
   };
 
   return (
-    <SafeAreaView edges={["top", "left", "right"]} className="flex-1 bg-zinc-900">
+    <SafeAreaView edges={["top", "left", "right"]} className="flex-1" style={{ backgroundColor: colors.background }}>
       {loading ? (
-        <View className="flex-1 justify-center items-center">
-          <ActivityIndicator size="large" color="#ffffff" />
-          <Text className="text-white mt-4">Loading Pre-Auth Keys...</Text>
-        </View>
+        <ScreenLoading label="Loading Pre-Auth Keys..." />
       ) : (
         <ScrollView
           className="flex-1 px-4 pt-4"
@@ -144,23 +146,23 @@ export default function PreAuthKeysScreen() {
           {/* Header */}
           <View className="mb-6 flex-row justify-between items-center">
             <View>
-              <Text className="text-white text-2xl font-bold">Pre-Auth Keys</Text>
-              <Text className="text-slate-400">
+              <Text className="text-2xl font-bold" style={{ color: colors.text }}>Pre-Auth Keys</Text>
+              <Text style={{ color: colors.textMuted }}>
                 API Version: {apiVersion} • {users.length} users
               </Text>
             </View>
             
             <View className="flex-row space-x-3">
               <TouchableOpacity onPress={fetchData} className="p-2">
-                <MaterialIcons name="refresh" size={24} color="white" />
+                <MaterialIcons name="refresh" size={24} color={colors.text} />
               </TouchableOpacity>
               
               <TouchableOpacity
                 onPress={() => setShowCreateModal(true)}
-                className="bg-blue-600 py-2 px-4 rounded-lg flex-row items-center"
+                className="py-2 px-4 rounded-lg flex-row items-center" style={{ backgroundColor: colors.primary }}
               >
-                <MaterialIcons name="add" size={16} color="white" />
-                <Text className="text-white font-semibold ml-1">Create Key</Text>
+                <MaterialIcons name="add" size={16} color={colors.onPrimary} />
+                <Text className="font-semibold ml-1" style={{ color: colors.onPrimary }}>Create Key</Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -168,9 +170,9 @@ export default function PreAuthKeysScreen() {
           {/* Users List */}
           {users.length === 0 ? (
             <View className="flex-1 justify-center items-center mt-20">
-              <MaterialIcons name="vpn-key-off" size={64} color="#6b7280" />
-              <Text className="text-slate-400 text-lg mt-4 text-center">No Users Found</Text>
-              <Text className="text-slate-500 text-center mt-2">Create users first to generate pre-auth keys</Text>
+              <MaterialIcons name="vpn-key-off" size={64} color={colors.muted} />
+              <Text className="text-lg mt-4 text-center" style={{ color: colors.textMuted }}>No Users Found</Text>
+              <Text className="text-center mt-2" style={{ color: colors.muted }}>Create users first to generate pre-auth keys</Text>
             </View>
           ) : (
             users.map((user: any) => {
@@ -180,57 +182,57 @@ export default function PreAuthKeysScreen() {
               const isExpanded = expandedUsers.has(user.name);
 
               return (
-                <View key={user.id} className="bg-zinc-800 rounded-xl p-4 mb-4 border border-zinc-700">
+                <View key={user.id} className="rounded-xl p-4 mb-4 border" style={{ backgroundColor: colors.surface, borderColor: colors.border }}>
                   {/* User Header */}
                   <TouchableOpacity 
                     onPress={() => toggleUserExpansion(user.name)}
                     className="flex-row items-center justify-between mb-3"
                   >
                     <View className="flex-row items-center flex-1">
-                      <View className="bg-blue-600 w-10 h-10 rounded-full items-center justify-center">
-                        <MaterialIcons name="person" size={20} color="white" />
+                      <View className="w-10 h-10 rounded-full items-center justify-center" style={{ backgroundColor: colors.primary }}>
+                        <MaterialIcons name="person" size={20} color={colors.onPrimary} />
                       </View>
                       <View className="ml-3 flex-1">
-                        <Text className="text-white text-lg font-semibold">{user.name}</Text>
-                        <Text className="text-slate-400 text-sm">ID: {user.id}</Text>
+                        <Text className="text-lg font-semibold" style={{ color: colors.text }}>{user.name}</Text>
+                        <Text className="text-sm" style={{ color: colors.textMuted }}>ID: {user.id}</Text>
                       </View>
                     </View>
 
                     <View className="flex-row items-center space-x-4">
                       <View className="items-center">
-                        <Text className="text-green-400 text-lg font-bold">{activeKeys}</Text>
-                        <Text className="text-slate-400 text-xs">Active</Text>
+                        <Text className="text-lg font-bold" style={{ color: colors.success }}>{activeKeys}</Text>
+                        <Text className="text-xs" style={{ color: colors.textMuted }}>Active</Text>
                       </View>
                       <View className="items-center">
-                        <Text className="text-slate-300 text-lg font-bold">{totalKeys}</Text>
-                        <Text className="text-slate-400 text-xs">Total</Text>
+                        <Text className="text-lg font-bold" style={{ color: colors.textSecondary }}>{totalKeys}</Text>
+                        <Text className="text-xs" style={{ color: colors.textMuted }}>Total</Text>
                       </View>
                       <MaterialIcons 
                         name={isExpanded ? "expand-less" : "expand-more"} 
                         size={24} 
-                        color="#60a5fa" 
+                        color={colors.primaryMuted} 
                       />
                     </View>
                   </TouchableOpacity>
 
                   {/* Keys List (Expandable) */}
                   {isExpanded && (
-                    <View className="mt-4 pt-4 border-t border-zinc-700">
+                    <View className="mt-4 pt-4 border-t" style={{ borderColor: colors.border }}>
                       {userKeys.length === 0 ? (
-                        <Text className="text-slate-400 text-center py-4">No keys found for this user</Text>
+                        <Text className="text-center py-4" style={{ color: colors.textMuted }}>No keys found for this user</Text>
                       ) : (
                         userKeys.map((key: any) => {
                           const keyStatus = getKeyStatus(key);
                           
                           return (
-                            <View key={key.id} className="bg-zinc-700 rounded-lg p-4 mb-3 border border-zinc-600">
+                            <View key={key.id} className="rounded-lg p-4 mb-3 border" style={{ backgroundColor: colors.surfaceMuted, borderColor: colors.border }}>
                               {/* Key Header */}
                               <View className="flex-row justify-between items-start mb-3">
                                 <View className="flex-1">
                                   <View className="flex-row items-center mb-2">
-                                    <Text className="text-white font-semibold">Key #{key.id}</Text>
-                                    <View className={`ml-2 px-2 py-1 rounded-full ${keyStatus.bg}`}>
-                                      <Text className={`text-xs font-semibold ${keyStatus.color}`}>
+                                    <Text className="font-semibold" style={{ color: colors.text }}>Key #{key.id}</Text>
+                                    <View className="ml-2 px-2 py-1 rounded-full" style={{ backgroundColor: keyStatus.bg }}>
+                                      <Text className="text-xs font-semibold" style={{ color: keyStatus.color }}>
                                         {keyStatus.status}
                                       </Text>
                                     </View>
@@ -239,26 +241,26 @@ export default function PreAuthKeysScreen() {
                                   {/* Key Properties */}
                                   <View className="space-y-1">
                                     <View className="flex-row">
-                                      <Text className="text-slate-400 w-16 text-xs">Reusable:</Text>
-                                      <Text className="text-slate-300 text-xs">
+                                      <Text className="w-16 text-xs" style={{ color: colors.textMuted }}>Reusable:</Text>
+                                      <Text className="text-xs" style={{ color: colors.textSecondary }}>
                                         {key.reusable ? "Yes" : "No"}
                                       </Text>
                                     </View>
                                     <View className="flex-row">
-                                      <Text className="text-slate-400 w-16 text-xs">Used:</Text>
-                                      <Text className="text-slate-300 text-xs">
+                                      <Text className="w-16 text-xs" style={{ color: colors.textMuted }}>Used:</Text>
+                                      <Text className="text-xs" style={{ color: colors.textSecondary }}>
                                         {key.used ? "Yes" : "No"}
                                       </Text>
                                     </View>
                                     <View className="flex-row">
-                                      <Text className="text-slate-400 w-16 text-xs">Created:</Text>
-                                      <Text className="text-slate-300 text-xs">
+                                      <Text className="w-16 text-xs" style={{ color: colors.textMuted }}>Created:</Text>
+                                      <Text className="text-xs" style={{ color: colors.textSecondary }}>
                                         {formatDate(key.createdAt)}
                                       </Text>
                                     </View>
                                     <View className="flex-row">
-                                      <Text className="text-slate-400 w-16 text-xs">Expires:</Text>
-                                      <Text className={`text-xs ${isExpired(key.expiration) ? 'text-red-400' : 'text-slate-300'}`}>
+                                      <Text className="w-16 text-xs" style={{ color: colors.textMuted }}>Expires:</Text>
+                                      <Text className="text-xs" style={{ color: isExpired(key.expiration) ? colors.error : colors.textSecondary }}>
                                         {formatDate(key.expiration)}
                                       </Text>
                                     </View>
@@ -270,18 +272,18 @@ export default function PreAuthKeysScreen() {
                                   {!!key.key && (
                                     <TouchableOpacity
                                       onPress={() => copyToClipboard(key.key, "Pre-auth key")}
-                                      className="bg-blue-600 p-2 rounded"
+                                      className="p-2 rounded" style={{ backgroundColor: colors.primary }}
                                     >
-                                      <MaterialIcons name="content-copy" size={16} color="white" />
+                                      <MaterialIcons name="content-copy" size={16} color={colors.onPrimary} />
                                     </TouchableOpacity>
                                   )}
                                   
                                   {!key.used && !isExpired(key.expiration) && (
                                     <TouchableOpacity
                                       onPress={() => confirmExpireKey(String(key.id), user.name)}
-                                      className="bg-red-600 p-2 rounded ml-2"
+                                      className="p-2 rounded ml-2" style={{ backgroundColor: colors.error }}
                                     >
-                                      <MaterialIcons name="block" size={16} color="white" />
+                                      <MaterialIcons name="block" size={16} color={colors.onPrimary} />
                                     </TouchableOpacity>
                                   )}
                                 </View>
@@ -289,14 +291,14 @@ export default function PreAuthKeysScreen() {
 
                               {/* Key Value */}
                               {!!key.key && (
-                                <View className="bg-zinc-800 p-3 rounded border border-zinc-600">
+                                <View className="p-3 rounded border" style={{ backgroundColor: colors.surface, borderColor: colors.border }}>
                                   <View className="flex-row justify-between items-center mb-1">
-                                    <Text className="text-slate-400 text-xs">Pre-Auth Key:</Text>
+                                    <Text className="text-xs" style={{ color: colors.textMuted }}>Pre-Auth Key:</Text>
                                     <TouchableOpacity onPress={() => copyToClipboard(key.key, "Key")}>
-                                      <Text className="text-blue-400 text-xs">Tap to copy</Text>
+                                      <Text className="text-xs" style={{ color: colors.primaryMuted }}>Tap to copy</Text>
                                     </TouchableOpacity>
                                   </View>
-                                  <Text className="text-white font-mono text-sm break-all" selectable>
+                                  <Text className="font-mono text-sm break-all" style={{ color: colors.text }} selectable>
                                     {key.key}
                                   </Text>
                                 </View>
@@ -315,25 +317,42 @@ export default function PreAuthKeysScreen() {
       )}
 
       {/* Create Key Modal */}
-      <Modal visible={showCreateModal} transparent animationType="slide">
-        <View className="flex-1 justify-center items-center px-4">
-          <View className="bg-zinc-800 rounded-xl p-6 w-full max-w-md">
-            <Text className="text-white text-xl font-bold mb-4 text-center">Create Pre-Auth Key</Text>
+      <Modal
+        visible={showCreateModal}
+        transparent
+        animationType="slide"
+        onRequestClose={() => {
+          setShowCreateModal(false);
+          setSelectedUser("");
+          setExpireTime("24h");
+          setIsReusable(false);
+        }}
+      >
+        <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+          <View className="flex-1 justify-center items-center px-4" style={{ backgroundColor: colors.overlay }}>
+            <KeyboardAvoidingView
+              behavior={Platform.OS === "ios" ? "padding" : undefined}
+              className="w-full max-w-md"
+            >
+          <View className="rounded-xl p-6 w-full" style={{ backgroundColor: colors.surface }}>
+            <Text className="text-xl font-bold mb-4 text-center" style={{ color: colors.text }}>Create Pre-Auth Key</Text>
             
             {/* User Selection */}
             <View className="mb-4">
-              <Text className="text-slate-400 text-sm mb-2">Select User:</Text>
-              <ScrollView className="max-h-32 bg-zinc-700 rounded-lg">
+              <Text className="text-sm mb-2" style={{ color: colors.textSecondary }}>Select User:</Text>
+              <ScrollView className="max-h-60" keyboardShouldPersistTaps="handled">
                 {users.map((user: any) => (
                   <TouchableOpacity
                     key={user.id}
                     onPress={() => setSelectedUser(user.name)}
-                    className={`p-3 border-b border-zinc-600 ${
-                      selectedUser === user.name ? 'bg-blue-600' : ''
-                    }`}
+                    activeOpacity={0.8}
+                    className="p-3 rounded-lg mb-2"
+                    style={{
+                      backgroundColor: selectedUser === user.name ? colors.primary : colors.surfaceMuted,
+                    }}
                   >
-                    <Text className="text-white">{user.name}</Text>
-                    <Text className="text-slate-400 text-xs">ID: {user.id}</Text>
+                    <Text style={{ color: selectedUser === user.name ? colors.onPrimary : colors.textSecondary }}>{user.name}</Text>
+                    <Text className="text-xs" style={{ color: selectedUser === user.name ? colors.onPrimary : colors.textMuted }}>ID: {user.id}</Text>
                   </TouchableOpacity>
                 ))}
               </ScrollView>
@@ -341,15 +360,15 @@ export default function PreAuthKeysScreen() {
 
             {/* Expiration Time */}
             <View className="mb-4">
-              <Text className="text-slate-400 text-sm mb-2">Expiration Time:</Text>
+              <Text className="text-sm mb-2" style={{ color: colors.textMuted }}>Expiration Time:</Text>
               <TextInput
-                className="bg-zinc-700 text-white p-3 rounded-lg"
+                className="p-3 rounded-lg" style={{ backgroundColor: colors.surfaceMuted, color: colors.text }}
                 value={expireTime}
                 onChangeText={setExpireTime}
                 placeholder="e.g. 24h, 7d, 30d"
-                placeholderTextColor="#94a3b8"
+                placeholderTextColor={colors.textMuted}
               />
-              <Text className="text-slate-500 text-xs mt-1">
+              <Text className="text-xs mt-1" style={{ color: colors.muted }}>
                 Examples: 1h (1 hour), 24h (24 hours), 7d (7 days), 30d (30 days)
               </Text>
             </View>
@@ -362,11 +381,11 @@ export default function PreAuthKeysScreen() {
               <MaterialIcons 
                 name={isReusable ? "check-box" : "check-box-outline-blank"} 
                 size={24} 
-                color={isReusable ? "#10b981" : "#6b7280"} 
+                color={isReusable ? colors.success : colors.muted} 
               />
               <View className="ml-3">
-                <Text className="text-white">Reusable Key</Text>
-                <Text className="text-slate-400 text-xs">Allow this key to be used multiple times</Text>
+                <Text style={{ color: colors.text }}>Reusable Key</Text>
+                <Text className="text-xs" style={{ color: colors.textMuted }}>Allow this key to be used multiple times</Text>
               </View>
             </TouchableOpacity>
 
@@ -379,20 +398,22 @@ export default function PreAuthKeysScreen() {
                   setExpireTime("24h");
                   setIsReusable(false);
                 }}
-                className="flex-1 bg-gray-600 py-3 rounded-lg"
+                className="flex-1 py-3 rounded-lg" style={{ backgroundColor: colors.secondary }}
               >
-                <Text className="text-white font-semibold text-center">Cancel</Text>
+                <Text className="font-semibold text-center" style={{ color: colors.onSecondary }}>Cancel</Text>
               </TouchableOpacity>
               
               <TouchableOpacity
                 onPress={handleCreateKeySubmit}
-                className="flex-1 bg-blue-600 py-3 rounded-lg"
+                className="flex-1 py-3 rounded-lg" style={{ backgroundColor: colors.primary }}
               >
-                <Text className="text-white font-semibold text-center">Create Key</Text>
+                <Text className="font-semibold text-center" style={{ color: colors.onPrimary }}>Create Key</Text>
               </TouchableOpacity>
             </View>
           </View>
-        </View>
+            </KeyboardAvoidingView>
+          </View>
+        </TouchableWithoutFeedback>
       </Modal>
     </SafeAreaView>
   );

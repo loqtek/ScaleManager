@@ -1,10 +1,12 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { getDevices, registerDevice } from "../api/devices";
+import { approveAuth, rejectAuth } from "../api/auth";
 import { getUsers } from "../api/users";
 import Toast from "react-native-toast-message";
 import { useRouter } from "expo-router";
-import { getApiEndpoints } from "../utils/apiUtils";
-import { isV026OrHigher } from "../utils/headscaleVersion";
+import { getApiEndpoints, isApiSuccess } from "../utils/apiUtils";
+import { isV029OrHigher } from "../utils/headscaleVersion";
+import { parseRegistrationInput } from "../utils/registrationUtils";
 import { Device } from "../types";
 
 export function useDevices() {
@@ -14,11 +16,17 @@ export function useDevices() {
   const [showRegisterModal, setShowRegisterModal] = useState(false);
   const [selectedUser, setSelectedUser] = useState<any>(null);
   const [deviceKey, setDeviceKey] = useState("");
+  const [serverVersion, setServerVersion] = useState<string>("");
   const router = useRouter();
 
-  const fetchDevices = async () => {
+  const fetchDevices = useCallback(async () => {
     setLoading(true);
     try {
+      const config = await getApiEndpoints();
+      if (config?.serverConf?.version) {
+        setServerVersion(config.serverConf.version);
+      }
+
       const [devicesData, usersData] = await Promise.all([
         getDevices(),
         getUsers()
@@ -47,13 +55,15 @@ export function useDevices() {
     } finally {
       setLoading(false);
     }
-  };
-
-  useEffect(() => {
-    fetchDevices();
   }, []);
 
-  // Get appropriate icon based on device name/type
+  useEffect(() => {
+    const handle = setTimeout(() => {
+      void fetchDevices();
+    }, 0);
+    return () => clearTimeout(handle);
+  }, [fetchDevices]);
+
   const getDeviceTypeIcon = (deviceName: string = ""): any => {
     const name = deviceName.toLowerCase();
     
@@ -69,7 +79,6 @@ export function useDevices() {
     return 'devices-other';
   };
 
-  // Format last seen time
   const getLastSeenText = (lastSeen: string): string => {
     try {
       const lastSeenDate = new Date(lastSeen);
@@ -91,39 +100,38 @@ export function useDevices() {
     }
   };
 
-  // Get count of online devices
   const getOnlineDevicesCount = (): number => {
     return devices.filter(device => device.online).length;
   };
 
-  // Sort devices by different criteria
   const sortDevices = (deviceList: Device[], sortBy: "name" | "lastSeen" | "user"): Device[] => {
     return [...deviceList].sort((a, b) => {
       switch (sortBy) {
-        case "name":
+        case "name": {
           const nameA = (a.givenName || a.name || "").toLowerCase();
           const nameB = (b.givenName || b.name || "").toLowerCase();
           return nameA.localeCompare(nameB);
-        
-        case "lastSeen":
+        }
+        case "lastSeen": {
           const dateA = new Date(a.lastSeen || 0).getTime();
           const dateB = new Date(b.lastSeen || 0).getTime();
-          return dateB - dateA; // Most recent first
-        
-        case "user":
+          return dateB - dateA;
+        }
+        case "user": {
           const userA = (a.user?.name || "").toLowerCase();
           const userB = (b.user?.name || "").toLowerCase();
           return userA.localeCompare(userB);
-        
+        }
         default:
           return 0;
       }
     });
   };
 
-  const confirmAndRegister = async (user: any, key: string) => {
+  const registrationFailed = (result: unknown) => !isApiSuccess(result);
+
+  const confirmAndRegister = async (user: any, keyOrAuthId: string) => {
     try {
-      // Check server version to determine whether to use ID or name
       const config = await getApiEndpoints();
       if (!config) {
         Toast.show({
@@ -135,22 +143,17 @@ export function useDevices() {
         return;
       }
 
-      const { serverConf } = config;
-      const useNumericIds = isV026OrHigher(serverConf.version);
-      
-      // Use user ID for v0.26+ or name for older versions
-      const userParam = useNumericIds ? user.id : user.name;
-      console.log(userParam, key)
-      const result = await registerDevice(userParam, key);
+      // Headscale RegisterNode resolves user by name, not numeric ID.
+      const result = await registerDevice(user.name, keyOrAuthId);
 
-      if (result) {
+      if (!registrationFailed(result)) {
         Toast.show({
           type: "success",
           position: "top",
           text1: "✅ Device Registered",
           text2: `Device registered successfully for ${user.name}!`,
         });
-        await fetchDevices(); // Refresh device list
+        await fetchDevices();
         setShowRegisterModal(false);
         setSelectedUser(null);
         setDeviceKey("");
@@ -159,7 +162,9 @@ export function useDevices() {
           type: "error",
           position: "top",
           text1: "⚠️ Registration Failed",
-          text2: "Failed to register device. Check your credentials.",
+          text2:
+            result?.message ||
+            "Failed to register device. Check the auth ID / key and user.",
         });
       }
     } catch (error) {
@@ -169,6 +174,44 @@ export function useDevices() {
         position: "top",
         text1: "⚠️ Registration Error",
         text2: "An error occurred during registration.",
+      });
+    }
+  };
+
+  const confirmAuthAction = async (
+    action: "approve" | "reject",
+    authId: string,
+  ) => {
+    try {
+      const result =
+        action === "approve"
+          ? await approveAuth(authId)
+          : await rejectAuth(authId);
+
+      if (!registrationFailed(result)) {
+        Toast.show({
+          type: "success",
+          position: "top",
+          text1: action === "approve" ? "✅ Auth Approved" : "✅ Auth Rejected",
+          text2: `Auth request ${authId} ${action}d.`,
+        });
+        setShowRegisterModal(false);
+        setDeviceKey("");
+      } else {
+        Toast.show({
+          type: "error",
+          position: "top",
+          text1: "⚠️ Auth Action Failed",
+          text2: result?.message || `Failed to ${action} auth request.`,
+        });
+      }
+    } catch (error) {
+      console.error("Auth action error:", error);
+      Toast.show({
+        type: "error",
+        position: "top",
+        text1: "⚠️ Auth Action Error",
+        text2: `An error occurred while trying to ${action}.`,
       });
     }
   };
@@ -186,45 +229,78 @@ export function useDevices() {
     setShowRegisterModal(true);
   };
 
-  const handleKeyInput = (input: string) => {
-    // Regex to match "headscale nodes register --user USERNAME --key KEY"
-    const fullCommandMatch = input.match(
-      /headscale\s+nodes?\s+register\s+--user\s+([^\s]+)\s+--key\s+([A-Za-z0-9:_-]+)/i
+  const resolveUser = (nameOrId?: string) => {
+    if (!nameOrId) return selectedUser;
+    return (
+      users.find(
+        (u) =>
+          u.name === nameOrId ||
+          String(u.id) === String(nameOrId),
+      ) || selectedUser
     );
-  
-    if (fullCommandMatch) {
-      //const username = fullCommandMatch[1];
-      const preAuthKey = fullCommandMatch[2];
-      if (preAuthKey) {
-        setDeviceKey(preAuthKey);
-        confirmAndRegister(selectedUser, preAuthKey);
-      } else {
-        Toast.show({
-          type: "error",
-          position: "top",
-          text1: "⚠️ User Not Found",
-          text2: `User "${selectedUser}" not found in the system`,
-        });
-      }
-    } else {
-      console.log("Treating as key only");
-      // Treat as just a key input
-      const trimmedKey = input.trim();
-      setDeviceKey(trimmedKey);
-  
-      if (selectedUser) {
-        confirmAndRegister(selectedUser, trimmedKey);
-      } else {
+  };
+
+  const handleKeyInput = async (input: string) => {
+    const parsed = parseRegistrationInput(input);
+
+    if (parsed.kind === "auth-approve") {
+      await confirmAuthAction("approve", parsed.authId);
+      return;
+    }
+    if (parsed.kind === "auth-reject") {
+      await confirmAuthAction("reject", parsed.authId);
+      return;
+    }
+
+    if (parsed.kind === "auth-register") {
+      const user = resolveUser(parsed.user);
+      if (!user) {
         Toast.show({
           type: "error",
           position: "top",
           text1: "⚠️ No User Selected",
-          text2: "Please select a user before registering with just a key.",
+          text2: "Select a user or include --user in the auth register command.",
         });
+        return;
       }
+      setDeviceKey(parsed.authId);
+      await confirmAndRegister(user, parsed.authId);
+      return;
     }
+
+    if (parsed.kind === "node-register") {
+      const user = resolveUser(parsed.user);
+      if (!user) {
+        Toast.show({
+          type: "error",
+          position: "top",
+          text1: "⚠️ No User Selected",
+          text2: "Select a user or include --user in the register command.",
+        });
+        return;
+      }
+      setDeviceKey(parsed.key);
+      await confirmAndRegister(user, parsed.key);
+      return;
+    }
+
+    const trimmedKey = parsed.value;
+    setDeviceKey(trimmedKey);
+
+    if (!selectedUser) {
+      Toast.show({
+        type: "error",
+        position: "top",
+        text1: "⚠️ No User Selected",
+        text2: isV029OrHigher(serverVersion)
+          ? "Select a user before registering with an auth ID."
+          : "Please select a user before registering with just a key.",
+      });
+      return;
+    }
+
+    await confirmAndRegister(selectedUser, trimmedKey);
   };
-  
 
   const handleDevicePress = (device: Device) => {
     router.push({
@@ -235,12 +311,10 @@ export function useDevices() {
     });
   };
 
-  // Get devices by user
   const getDevicesByUser = (userId: string): Device[] => {
     return devices.filter(device => device.user?.id === userId);
   };
 
-  // Get device statistics
   const getDeviceStats = () => {
     const totalDevices = devices.length;
     const onlineDevices = devices.filter(d => d.online).length;
@@ -274,8 +348,7 @@ export function useDevices() {
   };
 
   const handleModalRegister = () => {
-    console.log(selectedUser, deviceKey)
-    if (!selectedUser) {
+    if (!selectedUser && !/headscale\s+auth\s+(approve|reject)/i.test(deviceKey)) {
       Toast.show({
         type: "error",
         position: "top",
@@ -288,13 +361,55 @@ export function useDevices() {
       Toast.show({
         type: "error",
         position: "top",
-        text1: "⚠️ No Key",
-        text2: "Please enter a device key",
+        text1: isV029OrHigher(serverVersion) ? "⚠️ No Auth ID" : "⚠️ No Key",
+        text2: isV029OrHigher(serverVersion)
+          ? "Enter an auth ID or paste a headscale auth command"
+          : "Please enter a device key",
       });
       return;
     }
-    console.log(deviceKey)
     handleKeyInput(deviceKey);
+  };
+
+  const extractAuthId = (input: string) => {
+    const parsed = parseRegistrationInput(input);
+    if (
+      parsed.kind === "auth-approve" ||
+      parsed.kind === "auth-reject" ||
+      parsed.kind === "auth-register"
+    ) {
+      return parsed.authId;
+    }
+    if (parsed.kind === "raw") return parsed.value;
+    return "";
+  };
+
+  const handleModalApprove = () => {
+    const authId = extractAuthId(deviceKey);
+    if (!authId) {
+      Toast.show({
+        type: "error",
+        position: "top",
+        text1: "⚠️ No Auth ID",
+        text2: "Enter an auth ID to approve.",
+      });
+      return;
+    }
+    confirmAuthAction("approve", authId);
+  };
+
+  const handleModalReject = () => {
+    const authId = extractAuthId(deviceKey);
+    if (!authId) {
+      Toast.show({
+        type: "error",
+        position: "top",
+        text1: "⚠️ No Auth ID",
+        text2: "Enter an auth ID to reject.",
+      });
+      return;
+    }
+    confirmAuthAction("reject", authId);
   };
 
   return {
@@ -311,7 +426,7 @@ export function useDevices() {
     getDevicesByUser,
     getDeviceStats,
     router,
-    // Modal state and handlers
+    serverVersion,
     showRegisterModal,
     selectedUser,
     deviceKey,
@@ -319,5 +434,7 @@ export function useDevices() {
     setDeviceKey,
     handleModalClose,
     handleModalRegister,
+    handleModalApprove,
+    handleModalReject,
   };
 }

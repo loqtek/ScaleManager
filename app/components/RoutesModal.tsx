@@ -1,6 +1,7 @@
 import React from "react";
 import { Modal, View, Text, TouchableOpacity, ScrollView } from "react-native";
 import { MaterialIcons } from "@expo/vector-icons";
+import { useTheme } from "@/theme";
 
 interface RoutesModalProps {
   visible: boolean;
@@ -19,6 +20,9 @@ export const RoutesModal: React.FC<RoutesModalProps> = ({
   setSelectedRoutes,
   onApproveRoutes,
 }) => {
+  const { theme } = useTheme();
+  const { colors } = theme;
+
   const handleRouteToggle = (route: string) => {
     if (selectedRoutes.includes(route)) {
       setSelectedRoutes(selectedRoutes.filter(r => r !== route));
@@ -34,62 +38,71 @@ export const RoutesModal: React.FC<RoutesModalProps> = ({
 
   return (
     <Modal visible={visible} transparent animationType="slide">
-      <View className="flex-1 justify-center items-center bg-black/20">
-        <View className="bg-zinc-800 rounded-xl p-4 w-4/5 max-h-120">
-          <Text className="text-white text-lg font-semibold mb-4">Approve Routes</Text>
-          <Text className="text-slate-400 text-sm mb-4">
+      <View className="flex-1 justify-center items-center" style={{ backgroundColor: colors.overlay }}>
+        <View className="rounded-xl p-4 w-4/5 max-h-120" style={{ backgroundColor: colors.surface }}>
+          <Text className="text-lg font-semibold mb-4" style={{ color: colors.text }}>Approve Routes</Text>
+          <Text className="text-sm mb-4" style={{ color: colors.textMuted }}>
             Select routes to approve from available routes:
           </Text>
-          
+
           <ScrollView className="mb-4">
-            {availableRoutes?.map((route, index) => (
-              <TouchableOpacity
-                key={index}
-                onPress={() => handleRouteToggle(route)}
-                className={`flex-row items-center justify-between py-3 px-3 mb-2 rounded-lg ${
-                  selectedRoutes.includes(route) ? 'bg-green-600/20 border border-green-500' : 'bg-zinc-700'
-                }`}
-              >
-                <Text className={`font-mono text-sm flex-1 ${
-                  selectedRoutes.includes(route) ? 'text-green-400' : 'text-white'
-                }`}>
-                  {route}
-                </Text>
-                <MaterialIcons 
-                  name={selectedRoutes.includes(route) ? "check-box" : "check-box-outline-blank"} 
-                  size={20} 
-                  color={selectedRoutes.includes(route) ? "#10b981" : "#6b7280"} 
-                />
-              </TouchableOpacity>
-            ))}
+            {availableRoutes?.map((route, index) => {
+              const selected = selectedRoutes.includes(route);
+              return (
+                <TouchableOpacity
+                  key={index}
+                  onPress={() => handleRouteToggle(route)}
+                  activeOpacity={0.8}
+                  className="flex-row items-center justify-between py-3 px-3 mb-2 rounded-lg border"
+                  style={{
+                    backgroundColor: selected ? colors.successSoft : colors.surfaceMuted,
+                    borderColor: selected ? colors.success : "transparent",
+                  }}
+                >
+                  <Text
+                    className="font-mono text-sm flex-1"
+                    style={{ color: selected ? colors.success : colors.text }}
+                  >
+                    {route}
+                  </Text>
+                  <MaterialIcons
+                    name={selected ? "check-box" : "check-box-outline-blank"}
+                    size={20}
+                    color={selected ? colors.success : colors.muted}
+                  />
+                </TouchableOpacity>
+              );
+            })}
           </ScrollView>
 
           {selectedRoutes.length > 0 && (
-            <View className="bg-zinc-700 p-3 rounded-lg mb-4">
-              <Text className="text-slate-400 text-sm mb-1">Selected routes ({selectedRoutes.length}):</Text>
-              <Text className="text-green-400 text-sm font-mono">
+            <View className="p-3 rounded-lg mb-4" style={{ backgroundColor: colors.surfaceMuted }}>
+              <Text className="text-sm mb-1" style={{ color: colors.textMuted }}>Selected routes ({selectedRoutes.length}):</Text>
+              <Text className="text-sm font-mono" style={{ color: colors.success }}>
                 {selectedRoutes.join(", ")}
               </Text>
             </View>
           )}
-          
+
           <View className="flex-row space-x-2">
             <TouchableOpacity
               onPress={onApproveRoutes}
               disabled={selectedRoutes.length === 0}
-              className={`flex-1 py-3 rounded-lg mx-2 ${
-                selectedRoutes.length > 0 ? 'bg-green-600' : 'bg-gray-600'
-              }`}
+              activeOpacity={0.8}
+              className="flex-1 py-3 rounded-lg mx-2"
+              style={{ backgroundColor: selectedRoutes.length > 0 ? colors.success : colors.secondary }}
             >
-              <Text className="text-white font-semibold text-center">
+              <Text className="font-semibold text-center" style={{ color: selectedRoutes.length > 0 ? colors.onPrimary : colors.onSecondary }}>
                 Approve {selectedRoutes.length > 0 ? `(${selectedRoutes.length})` : ''}
               </Text>
             </TouchableOpacity>
             <TouchableOpacity
               onPress={handleClose}
-              className="flex-1 bg-gray-600 py-3 rounded-lg mx-2"
+              activeOpacity={0.8}
+              className="flex-1 py-3 rounded-lg mx-2"
+              style={{ backgroundColor: colors.secondary }}
             >
-              <Text className="text-white text-center">Cancel</Text>
+              <Text className="text-center" style={{ color: colors.onSecondary }}>Cancel</Text>
             </TouchableOpacity>
           </View>
         </View>

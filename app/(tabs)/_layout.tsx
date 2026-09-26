@@ -1,14 +1,14 @@
 import { Tabs } from "expo-router";
-import { MaterialCommunityIcons, Entypo } from "@expo/vector-icons";
+import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { getServerConfig } from "../utils/getServer";
 import { useEffect, useState } from "react";
 import { isV026OrHigher } from "../utils/headscaleVersion";
-
-
-
+import { useTheme } from "@/theme";
+import { spacing } from "@/theme/spacing";
 
 export default function TabLayout() {
   const [hideRoutes, setHideRoutes] = useState(false);
+  const { theme } = useTheme();
 
   useEffect(() => {
     async function checkVersion() {
@@ -23,8 +23,23 @@ export default function TabLayout() {
   return (
     <Tabs
       screenOptions={{
+        headerShown: false,
+        tabBarActiveTintColor: theme.colors.primary,
+        tabBarInactiveTintColor: theme.colors.tabBarInactive,
         tabBarStyle: {
-          backgroundColor: "#27272a",
+          backgroundColor: theme.colors.tabBar,
+          borderTopColor: theme.colors.tabBarBorder,
+          borderTopWidth: 1,
+          height: 74,
+          paddingTop: spacing.xs,
+          paddingBottom: spacing.sm,
+        },
+        tabBarLabelStyle: {
+          ...theme.typography.label,
+          marginTop: 2,
+        },
+        tabBarItemStyle: {
+          paddingVertical: spacing.xs,
         },
       }}
     >
@@ -34,7 +49,7 @@ export default function TabLayout() {
           title: "Home",
           headerShown: false,
           tabBarIcon: ({ color }) => (
-            <MaterialCommunityIcons name="home" color={color} size={26} />
+            <MaterialCommunityIcons name="home" color={color} size={24} />
           ),
         }}
       />
@@ -45,7 +60,7 @@ export default function TabLayout() {
           title: "Users",
           headerShown: false,
           tabBarIcon: ({ color }) => (
-            <Entypo name="users" color={color} size={26} />
+            <MaterialCommunityIcons name="account-group" color={color} size={24} />
           ),
         }}
       />
@@ -56,7 +71,7 @@ export default function TabLayout() {
           title: "Devices",
           headerShown: false,
           tabBarIcon: ({ color }) => (
-            <MaterialCommunityIcons name="devices" color={color} size={26} />
+            <MaterialCommunityIcons name="devices" color={color} size={24} />
           ),
         }}
       />
@@ -67,7 +82,7 @@ export default function TabLayout() {
           title: "Auth Keys",
           headerShown: false,
           tabBarIcon: ({ color }) => (
-            <MaterialCommunityIcons name="key-chain" color={color} size={26} />
+            <MaterialCommunityIcons name="key-chain" color={color} size={24} />
           ),
         }}
       />
@@ -78,7 +93,7 @@ export default function TabLayout() {
           title: "API Keys",
           headerShown: false,
           tabBarIcon: ({ color }) => (
-            <MaterialCommunityIcons name="key" color={color} size={26} />
+            <MaterialCommunityIcons name="key" color={color} size={24} />
           ),
         }}
       />
@@ -88,13 +103,12 @@ export default function TabLayout() {
         options={{
           title: "Routes",
           headerShown: false,
-          // Hide the tab completely when hideRoutes is true
-          href: hideRoutes ? null : '/routes',
+          href: hideRoutes ? null : "/routes",
           tabBarIcon: ({ color }) => (
             <MaterialCommunityIcons
               name="router-network"
               color={color}
-              size={26}
+              size={24}
             />
           ),
         }}
@@ -109,7 +123,7 @@ export default function TabLayout() {
             <MaterialCommunityIcons
               name="shield-account"
               color={color}
-              size={26}
+              size={24}
             />
           ),
         }}

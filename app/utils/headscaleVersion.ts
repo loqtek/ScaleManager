@@ -16,3 +16,10 @@ export function isV028OrHigher(version?: string): boolean {
   if (!Number.isFinite(major) || !Number.isFinite(minor)) return false;
   return major > 0 || minor >= 28;
 }
+
+export function isV029OrHigher(version?: string): boolean {
+  const key = getVersionKey(version).replace(/^v/, "");
+  const [major, minor] = key.split(".").map((part) => Number(part));
+  if (!Number.isFinite(major) || !Number.isFinite(minor)) return false;
+  return major > 0 || minor >= 29;
+}

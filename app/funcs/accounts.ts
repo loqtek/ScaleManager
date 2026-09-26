@@ -2,10 +2,12 @@ import { useState, useEffect } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useRouter } from "expo-router";
 import Toast from "react-native-toast-message";
-import { testAPIKey } from "../api/login";
+import { testAPIKeyDetailed } from "../api/login";
+import { normalizeApiKey } from "../utils/apiKeyUtils";
 import { parseVersion } from "../utils/getServer";
+import { isInsecureHttpUrl } from "../components/HttpInsecureWarning";
 
-export type HeadscaleVersion = "0.23.x" | "0.24.x" | "0.25.x" | "0.26.x" | "0.27.x" | "0.28.x";
+export type HeadscaleVersion = "0.23.x" | "0.24.x" | "0.25.x" | "0.26.x" | "0.27.x" | "0.28.x" | "0.29.x";
 
 interface ServerAccount {
   name: string;
@@ -20,6 +22,7 @@ interface AddAccountParams {
   server: string;
   apiKey: string;
   version: HeadscaleVersion;
+  httpRiskAcknowledged?: boolean;
   onSuccess?: () => void;
   onFail?: () => void;
 }
@@ -86,6 +89,7 @@ export function useAccountsManager() {
     server,
     apiKey,
     version,
+    httpRiskAcknowledged = false,
     onSuccess,
     onFail,
   }: AddAccountParams) => {
@@ -106,6 +110,17 @@ export function useAccountsManager() {
         position: "top",
         text1: "⚠️ Invalid Server URL",
         text2: "Must start with http:// or https://",
+      });
+      if (onFail) onFail();
+      return;
+    }
+
+    if (isInsecureHttpUrl(server) && !httpRiskAcknowledged) {
+      Toast.show({
+        type: "error",
+        position: "top",
+        text1: "HTTP confirmation required",
+        text2: "Confirm you understand the risk before sending your API token over HTTP.",
       });
       if (onFail) onFail();
       return;
@@ -143,23 +158,27 @@ export function useAccountsManager() {
     }
 
     setLoading(true);
-    
-    let isValid = false;
+
+    const normalizedKey = normalizeApiKey(apiKey);
+    let authResult: Awaited<ReturnType<typeof testAPIKeyDetailed>>;
     // temp for apple login demo, will do nothing
-    if (server === "https://appledemo.login.ieouiudhmpac.com" && apiKey === "WlEB2D3t4fdash89LQW65KDsaD9oq0d2npso78uJolmOod2jp7") {
-      isValid = true;
+    if (
+      server === "https://appledemo.login.ieouiudhmpac.com" &&
+      normalizedKey === "WlEB2D3t4fdash89LQW65KDsaD9oq0d2npso78uJolmOod2jp7"
+    ) {
+      authResult = { ok: true };
     } else {
-      isValid = await testAPIKey(server, apiKey);
+      authResult = await testAPIKeyDetailed(server, normalizedKey);
     }
-    
+
     setLoading(false);
 
-    if (!isValid) {
+    if (!authResult.ok) {
       Toast.show({
         type: "error",
         position: "top",
-        text1: "⚠️ Invalid API Key",
-        text2: "Check the key and try again.",
+        text1: "⚠️ Connection Failed",
+        text2: authResult.message || "Check the key and try again.",
       });
       if (onFail) onFail();
       return;
@@ -168,7 +187,7 @@ export function useAccountsManager() {
     const newEntry: ServerAccount = {
       name: customName.trim(),
       server: server.trim(),
-      apiKey: apiKey.trim(),
+      apiKey: normalizedKey,
       addedOn: new Date().toISOString(),
       version: parseVersion(version),
     };
