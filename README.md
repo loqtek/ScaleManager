@@ -22,6 +22,18 @@ pre-auth keys, users, API keys, devices, device registration and more all with o
   </a>
 </p>
 
+## Screenshots
+
+<p align="center">
+  <a href="docs/screenshots.md">
+    <img src="assets/images/iPhone%2013%20Pro%20Max%20-%201.png" alt="Scale Manager home screen in light and dark mode" width="320" />
+  </a>
+</p>
+
+<p align="center">
+  <a href="docs/screenshots.md"><strong>See all screenshots →</strong></a>
+</p>
+
 ## Features
 - Manage multiple servers
 - Device registration, deletion, and modification
