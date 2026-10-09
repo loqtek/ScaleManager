@@ -17,8 +17,8 @@ pre-auth keys, users, API keys, devices, device registration and more all with o
   <a href="https://apps.apple.com/us/app/scale-manager/id6751473022" target="_blank">
     <img src="https://tools.applemediaservices.com/api/badges/download-on-the-app-store/black/en-us" alt="Download on the App Store" height="180">
   </a>
-  <a href="">
-      Android Coming Soon
+  <a href="https://github.com/loqtek/ScaleManager/releases">
+      Android Coming Soon (APK Available)
   </a>
 </p>
 
