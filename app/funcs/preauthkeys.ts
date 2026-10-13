@@ -6,6 +6,19 @@ import { isV026OrHigher, isV028OrHigher } from "../utils/headscaleVersion";
 import Toast from "react-native-toast-message";
 import { calculateExpirationDate } from "../utils/time";
 
+/** Full secret from create. List responses on v0.28+ only include a masked prefix. */
+function createdPreAuthKeyValue(result: unknown): string | null {
+  if (!result || typeof result !== "object") return null;
+  const body = result as Record<string, unknown>;
+  const nested = body.preAuthKey ?? body.preauthKey;
+  if (nested && typeof nested === "object") {
+    const key = (nested as Record<string, unknown>).key;
+    if (typeof key === "string" && key.trim()) return key.trim();
+  }
+  if (typeof body.key === "string" && body.key.trim()) return body.key.trim();
+  return null;
+}
+
 export const usePreAuthManager = () => {
   const [users, setUsers] = useState<any[]>([]);
   const [preAuthKeys, setPreAuthKeys] = useState<Record<string, any[]>>({});
@@ -172,26 +185,34 @@ export const usePreAuthManager = () => {
     const result = await createPreAuthKey(userIdentifier, expirationDate, reusable);
     
     if (isApiSuccess(result)) {
-      Toast.show({
-        type: "success",
-        position: "top",
-        text1: "✅ Key Created",
-        text2: `Key created successfully for ${userName}.`,
-      });
-      
+      const key = createdPreAuthKeyValue(result);
+
       try {
-        fetchData()
+        await fetchData();
       } catch (error) {
         console.error("Failed to refresh preauth keys:", error);
       }
-    } else {
-      Toast.show({
-        type: "error",
-        position: "top",
-        text1: "Failed to Create Key",
-        text2: `Failed to create key for ${userName}.`,
-      });
+
+      if (!key) {
+        Toast.show({
+          type: "success",
+          position: "top",
+          text1: "✅ Key Created",
+          text2: `Key created for ${userName}, but the server did not return the full key.`,
+        });
+        return { key: null };
+      }
+
+      return { key };
     }
+
+    Toast.show({
+      type: "error",
+      position: "top",
+      text1: "Failed to Create Key",
+      text2: `Failed to create key for ${userName}.`,
+    });
+    return null;
   };
 
   return {

@@ -29,14 +29,14 @@ export default function TabLayout() {
         tabBarStyle: {
           backgroundColor: theme.colors.tabBar,
           borderTopColor: theme.colors.tabBarBorder,
-          borderTopWidth: 1,
-          height: 74,
+          height: 84,
           paddingTop: spacing.xs,
           paddingBottom: spacing.sm,
         },
         tabBarLabelStyle: {
           ...theme.typography.label,
           marginTop: 2,
+          fontSize: 11
         },
         tabBarItemStyle: {
           paddingVertical: spacing.xs,

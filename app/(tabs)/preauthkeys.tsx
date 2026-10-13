@@ -3,13 +3,107 @@ import {
   Text, View, ScrollView, TouchableOpacity,
   RefreshControl, Modal, TextInput, Alert, Clipboard,
   KeyboardAvoidingView, Platform, TouchableWithoutFeedback, Keyboard,
+  useWindowDimensions,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { MaterialIcons } from "@expo/vector-icons";
 import Toast from "react-native-toast-message";
 import { usePreAuthManager } from "@/app/funcs/preauthkeys";
 import { ScreenLoading } from "@/app/components/ScreenLoading";
+import { isV028OrHigher } from "@/app/utils/headscaleVersion";
 import { useTheme } from "@/theme";
+
+function CreatedPreAuthKeyView({
+  preAuthKey,
+  oneTimeOnly,
+  onClose,
+  onCopy,
+}: {
+  preAuthKey: string;
+  oneTimeOnly: boolean;
+  onClose: () => void;
+  onCopy: (value: string) => void;
+}) {
+  const { theme } = useTheme();
+  const colors = theme.colors;
+  const { height } = useWindowDimensions();
+
+  return (
+    <View
+      className="rounded-2xl w-full overflow-hidden"
+      style={{ backgroundColor: colors.surface, maxHeight: height * 0.85 }}
+    >
+    <ScrollView bounces={false} keyboardShouldPersistTaps="handled" contentContainerStyle={{ padding: 24 }}>
+      <View className="items-center mb-5">
+        <View
+          className="w-16 h-16 rounded-full items-center justify-center mb-3"
+          style={{ backgroundColor: colors.successSoft }}
+        >
+          <MaterialIcons name="vpn-key" size={30} color={colors.success} />
+        </View>
+        <Text className="text-xl font-bold text-center" style={{ color: colors.text }}>
+          Pre-Auth Key Created
+        </Text>
+        <Text className="text-center mt-1" style={{ color: colors.textMuted }}>
+          Copy this key to enroll a device.
+        </Text>
+      </View>
+
+      {oneTimeOnly && (
+        <View
+          className="flex-row items-start p-3 rounded-xl mb-4 border"
+          style={{ backgroundColor: colors.surfaceMuted, borderColor: colors.warning }}
+        >
+          <MaterialIcons name="warning-amber" size={20} color={colors.warning} />
+          <Text className="flex-1 ml-2 text-sm leading-5" style={{ color: colors.text }}>
+            This is the only time you&apos;ll be able to access this key.
+          </Text>
+        </View>
+      )}
+
+      <TouchableOpacity
+        onPress={() => onCopy(preAuthKey)}
+        activeOpacity={0.8}
+        className="p-4 rounded-xl mb-5 border"
+        style={{ backgroundColor: colors.background, borderColor: colors.border }}
+      >
+        <View className="flex-row justify-between items-center mb-2">
+          <Text className="text-xs font-semibold" style={{ color: colors.textMuted }}>
+            Pre-Auth Key
+          </Text>
+          <Text className="text-xs font-semibold" style={{ color: colors.primaryMuted }}>
+            Tap to copy
+          </Text>
+        </View>
+        <Text className="font-mono text-sm break-all leading-6" style={{ color: colors.text }} selectable>
+          {preAuthKey}
+        </Text>
+      </TouchableOpacity>
+
+      <View className="flex-row space-x-3">
+        <TouchableOpacity
+          onPress={() => onCopy(preAuthKey)}
+          className="flex-1 py-3 rounded-lg flex-row items-center justify-center"
+          style={{ backgroundColor: colors.primary }}
+          activeOpacity={0.7}
+        >
+          <MaterialIcons name="content-copy" size={18} color={colors.onPrimary} />
+          <Text className="font-semibold ml-2" style={{ color: colors.onPrimary }}>Copy Key</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          onPress={onClose}
+          className="flex-1 py-3 rounded-lg ml-4"
+          style={{ backgroundColor: colors.secondaryPressed }}
+          activeOpacity={0.7}
+        >
+          <Text className="font-semibold text-center" style={{ color: colors.onSecondary }}>Done</Text>
+        </TouchableOpacity>
+      </View>
+    </ScrollView>
+    </View>
+  );
+}
 
 export default function PreAuthKeysScreen() {
   const { theme } = useTheme();
@@ -29,6 +123,8 @@ export default function PreAuthKeysScreen() {
   const [expireTime, setExpireTime] = useState("24h");
   const [isReusable, setIsReusable] = useState(false);
   const [expandedUsers, setExpandedUsers] = useState<Set<string>>(new Set());
+  const [createdKey, setCreatedKey] = useState<string | null>(null);
+  const [creating, setCreating] = useState(false);
 
   useEffect(() => {
     fetchData();
@@ -93,6 +189,15 @@ export default function PreAuthKeysScreen() {
     setExpandedUsers(newExpanded);
   };
 
+  const resetCreateForm = () => {
+    setShowCreateModal(false);
+    setSelectedUser("");
+    setExpireTime("24h");
+    setIsReusable(false);
+    setCreatedKey(null);
+    setCreating(false);
+  };
+
   const handleCreateKeySubmit = async () => {
     if (!selectedUser || !expireTime) {
       Toast.show({
@@ -104,11 +209,22 @@ export default function PreAuthKeysScreen() {
       return;
     }
 
-    await handleCreateKey(selectedUser, expireTime, isReusable);
-    setShowCreateModal(false);
-    setSelectedUser("");
-    setExpireTime("24h");
-    setIsReusable(false);
+    setCreating(true);
+    try {
+      const created = await handleCreateKey(selectedUser, expireTime, isReusable);
+      if (created?.key) {
+        setExpandedUsers((current) => {
+          const next = new Set(current);
+          next.add(selectedUser);
+          return next;
+        });
+        setCreatedKey(created.key);
+      } else if (created) {
+        resetCreateForm();
+      }
+    } finally {
+      setCreating(false);
+    }
   };
 
   const confirmExpireKey = (keyId: string, userName: string) => {
@@ -322,10 +438,8 @@ export default function PreAuthKeysScreen() {
         transparent
         animationType="slide"
         onRequestClose={() => {
-          setShowCreateModal(false);
-          setSelectedUser("");
-          setExpireTime("24h");
-          setIsReusable(false);
+          if (creating) return;
+          resetCreateForm();
         }}
       >
         <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
@@ -334,6 +448,14 @@ export default function PreAuthKeysScreen() {
               behavior={Platform.OS === "ios" ? "padding" : undefined}
               className="w-full max-w-md"
             >
+              {createdKey ? (
+                <CreatedPreAuthKeyView
+                  preAuthKey={createdKey}
+                  oneTimeOnly={isV028OrHigher(apiVersion)}
+                  onClose={resetCreateForm}
+                  onCopy={(value) => copyToClipboard(value, "Pre-auth key")}
+                />
+              ) : (
           <View className="rounded-xl p-6 w-full" style={{ backgroundColor: colors.surface }}>
             <Text className="text-xl font-bold mb-4 text-center" style={{ color: colors.text }}>Create Pre-Auth Key</Text>
             
@@ -367,6 +489,7 @@ export default function PreAuthKeysScreen() {
                 onChangeText={setExpireTime}
                 placeholder="e.g. 24h, 7d, 30d"
                 placeholderTextColor={colors.textMuted}
+                editable={!creating}
               />
               <Text className="text-xs mt-1" style={{ color: colors.muted }}>
                 Examples: 1h (1 hour), 24h (24 hours), 7d (7 days), 30d (30 days)
@@ -376,6 +499,7 @@ export default function PreAuthKeysScreen() {
             {/* Reusable Toggle */}
             <TouchableOpacity
               onPress={() => setIsReusable(!isReusable)}
+              disabled={creating}
               className="flex-row items-center mb-6"
             >
               <MaterialIcons 
@@ -392,25 +516,25 @@ export default function PreAuthKeysScreen() {
             {/* Buttons */}
             <View className="flex-row space-x-3">
               <TouchableOpacity
-                onPress={() => {
-                  setShowCreateModal(false);
-                  setSelectedUser("");
-                  setExpireTime("24h");
-                  setIsReusable(false);
-                }}
-                className="flex-1 py-3 rounded-lg" style={{ backgroundColor: colors.secondary }}
+                onPress={resetCreateForm}
+                disabled={creating}
+                className="flex-1 py-3 rounded-lg" style={{ backgroundColor: colors.secondary, opacity: creating ? 0.6 : 1 }}
               >
                 <Text className="font-semibold text-center" style={{ color: colors.onSecondary }}>Cancel</Text>
               </TouchableOpacity>
               
               <TouchableOpacity
                 onPress={handleCreateKeySubmit}
-                className="flex-1 py-3 rounded-lg" style={{ backgroundColor: colors.primary }}
+                disabled={creating}
+                className="flex-1 py-3 rounded-lg" style={{ backgroundColor: colors.primary, opacity: creating ? 0.7 : 1 }}
               >
-                <Text className="font-semibold text-center" style={{ color: colors.onPrimary }}>Create Key</Text>
+                <Text className="font-semibold text-center" style={{ color: colors.onPrimary }}>
+                  {creating ? "Creating..." : "Create Key"}
+                </Text>
               </TouchableOpacity>
             </View>
           </View>
+              )}
             </KeyboardAvoidingView>
           </View>
         </TouchableWithoutFeedback>
