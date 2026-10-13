@@ -227,6 +227,10 @@ export default function PreAuthKeysScreen() {
     }
   };
 
+  // v0.28+ expires by numeric id. Older versions look the key up by its full secret.
+  const expireKeyValue = (key: { id?: string | number; key?: string }) =>
+    isV028OrHigher(apiVersion) ? String(key.id) : String(key.key ?? "");
+
   const confirmExpireKey = (keyId: string, userName: string) => {
     Alert.alert(
       "Expire Key",
@@ -396,7 +400,7 @@ export default function PreAuthKeysScreen() {
                                   
                                   {!key.used && !isExpired(key.expiration) && (
                                     <TouchableOpacity
-                                      onPress={() => confirmExpireKey(String(key.id), user.name)}
+                                      onPress={() => confirmExpireKey(expireKeyValue(key), user.name)}
                                       className="p-2 rounded ml-2" style={{ backgroundColor: colors.error }}
                                     >
                                       <MaterialIcons name="block" size={16} color={colors.onPrimary} />
