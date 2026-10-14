@@ -40,7 +40,7 @@ export function useRoutes() {
         Toast.show({
         type: "success",
         position: "top",
-        text1: "✅ Route Disabled",
+        text1: "Route Disabled",
         text2: "Route Disabled Successfully",
       });
       fetchRoutes();
@@ -70,7 +70,7 @@ export function useRoutes() {
       Toast.show({
         type: "success",
         position: "top",
-        text1: "✅ Route Enabled",
+        text1: "Route Enabled",
         text2: "Route Enabled Successfully",
       });
       fetchRoutes();

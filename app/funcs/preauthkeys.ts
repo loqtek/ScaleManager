@@ -197,7 +197,7 @@ export const usePreAuthManager = () => {
         Toast.show({
           type: "success",
           position: "top",
-          text1: "✅ Key Created",
+          text1: "Key Created",
           text2: `Key created for ${userName}, but the server did not return the full key.`,
         });
         return { key: null };

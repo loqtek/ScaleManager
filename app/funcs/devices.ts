@@ -150,7 +150,7 @@ export function useDevices() {
         Toast.show({
           type: "success",
           position: "top",
-          text1: "✅ Device Registered",
+          text1: "Device Registered",
           text2: `Device registered successfully for ${user.name}!`,
         });
         await fetchDevices();
@@ -192,7 +192,7 @@ export function useDevices() {
         Toast.show({
           type: "success",
           position: "top",
-          text1: action === "approve" ? "✅ Auth Approved" : "✅ Auth Rejected",
+          text1: action === "approve" ? "Auth Approved" : "Auth Rejected",
           text2: `Auth request ${authId} ${action}d.`,
         });
         setShowRegisterModal(false);
