@@ -1,5 +1,6 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { Alert } from "react-native";
+import { useIsFocused } from "expo-router/build/useIsFocused";
 import { checkACLPolicy, getACLPolicy, updateACLPolicy } from "@/app/api/acl";
 import { getApiEndpoints } from "@/app/utils/apiUtils";
 import { isV029OrHigher } from "@/app/utils/headscaleVersion";
@@ -55,6 +56,25 @@ export const useACL = (): ACLHookReturn => {
   const [showErrorModal, setShowErrorModal] = useState(false);
   const [currentError, setCurrentError] = useState<any>(null);
   const [serverVersion, setServerVersion] = useState("");
+  const isFocused = useIsFocused();
+  const isFocusedRef = useRef(isFocused);
+  const pendingFetchAlert = useRef<{ title: string; message: string } | null>(null);
+
+  useEffect(() => {
+    isFocusedRef.current = isFocused;
+    if (!isFocused || !pendingFetchAlert.current) return;
+    const pending = pendingFetchAlert.current;
+    pendingFetchAlert.current = null;
+    Alert.alert(pending.title, pending.message);
+  }, [isFocused]);
+
+  const alertIfFocused = (title: string, message: string) => {
+    if (isFocusedRef.current) {
+      Alert.alert(title, message);
+      return;
+    }
+    pendingFetchAlert.current = { title, message };
+  };
 
   const fetchPolicy = useCallback(async () => {
     try {
@@ -79,8 +99,9 @@ export const useACL = (): ACLHookReturn => {
         
         setPolicy(formattedPolicy);
         setOriginalPolicy(formattedPolicy);
+        pendingFetchAlert.current = null;
       } else {
-        Alert.alert("Error", "Failed to fetch ACL policy");
+        alertIfFocused("Error", "Failed to fetch ACL policy");
       }
     } catch (error: any) {
       console.error("Error fetching policy:", error);
@@ -108,7 +129,7 @@ export const useACL = (): ACLHookReturn => {
       }
       
       setCurrentError({ message: errorMessage });
-      Alert.alert("Error", "Failed to fetch ACL policy. Check your connection.");
+      alertIfFocused("Error", "Failed to fetch ACL policy. Check your connection.");
     } finally {
       setLoading(false);
     }
