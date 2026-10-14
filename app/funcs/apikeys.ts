@@ -87,7 +87,7 @@ export function useApiKeys() {
         Toast.show({
           type: "success",
           position: "top",
-          text1: "✅ API Key Created",
+          text1: "API Key Created",
           text2: "New API key generated successfully",
         });
 
@@ -99,7 +99,7 @@ export function useApiKeys() {
       Toast.show({
         type: "error",
         position: "top",
-        text1: "❌ Creation Failed",
+        text1: "Creation Failed",
         text2: "Failed to create API key",
       });
       return null;
@@ -108,7 +108,7 @@ export function useApiKeys() {
       Toast.show({
         type: "error",
         position: "top",
-        text1: "❌ Creation Failed",
+        text1: "Creation Failed",
         text2: "An error occurred while creating the key",
       });
       return null;
@@ -121,7 +121,7 @@ export function useApiKeys() {
       Toast.show({
         type: "success",
         position: "top",
-        text1: "✅ Key Expired",
+        text1: "Key Expired",
         text2: "API Key Expired Successfully",
       });
       await fetchApiKeys();

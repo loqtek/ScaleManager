@@ -69,7 +69,7 @@ export function useLogin() {
       Toast.show({
         type: fellBack ? "info" : "success",
         position: "top",
-        text1: fellBack ? "Switched server" : "✅ Connected",
+        text1: fellBack ? "Switched server" : "Connected",
         text2: fellBack
           ? `"${selectedName}" failed the connection test. Connected to ${candidate.name}.`
           : `Connected to ${candidate.name}.`,
@@ -139,7 +139,7 @@ export function useLogin() {
     Toast.show({
       type: "success",
       position: "top",
-      text1: "✅ Connected",
+      text1: "Connected",
       text2: "Successfully connected to Headscale.",
     });
     const newEntry = {

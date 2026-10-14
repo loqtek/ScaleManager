@@ -97,7 +97,7 @@ export function useDeviceDetail(deviceData: string | undefined) {
         Toast.show({
           type: "success",
           position: "top",
-          text1: "✅ Device Renamed",
+          text1: "Device Renamed",
           text2: `Device renamed to "${tempValue.trim()}"`,
         });
       } else {
@@ -155,7 +155,7 @@ export function useDeviceDetail(deviceData: string | undefined) {
         Toast.show({
           type: "success",
           position: "top",
-          text1: "✅ User Changed",
+          text1: "User Changed",
           text2: `Device assigned to "${newUser}"`,
         });
       } else {
@@ -220,7 +220,7 @@ export function useDeviceDetail(deviceData: string | undefined) {
         Toast.show({
           type: "success",
           position: "top",
-          text1: "✅ Tags Added",
+          text1: "Tags Added",
           text2: `Added ${tagsArray.length} tag(s)`,
         });
       } else {
@@ -262,7 +262,7 @@ export function useDeviceDetail(deviceData: string | undefined) {
         Toast.show({
           type: "success",
           position: "top",
-          text1: "✅ Routes Updated",
+          text1: "Routes Updated",
           text2: `Approved ${selectedRoutes.length} route(s)`,
         });
       } else {
@@ -309,7 +309,7 @@ export function useDeviceDetail(deviceData: string | undefined) {
                 Toast.show({
                   type: "success",
                   position: "top",
-                  text1: "✅ Route Removed",
+                  text1: "Route Removed",
                   text2: `Route "${route}" removed from approved`,
                 });
               } else {

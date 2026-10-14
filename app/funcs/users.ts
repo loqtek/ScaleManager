@@ -103,7 +103,7 @@ export function useUsers() {
                 Toast.show({
                   type: "success",
                   position: "top",
-                  text1: "✅ User Added",
+                  text1: "User Added",
                   text2: `User "${trimmed}" added successfully!`,
                 });
               } else {
@@ -188,7 +188,7 @@ export function useUsers() {
                 Toast.show({
                   type: "success",
                   position: "top",
-                  text1: "✅ User Renamed",
+                  text1: "User Renamed",
                   text2: `"${name}" renamed to "${newName}"`,
                 });
               } else {
@@ -245,7 +245,7 @@ export function useUsers() {
         Toast.show({
           type: "success",
           position: "top",
-          text1: "✅ User Deleted",
+          text1: "User Deleted",
           text2: `User "${userName}" deleted successfully!`,
         });
       } else {

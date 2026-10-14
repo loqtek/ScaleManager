@@ -76,7 +76,7 @@ export function useAccountsManager() {
     Toast.show({
       type: "success",
       position: "top",
-      text1: "✅ Account Removed",
+      text1: "Account Removed",
       text2: `Account "${accountName}" has been removed.`,
     });
 
@@ -148,7 +148,7 @@ export function useAccountsManager() {
       Toast.show({
         type: "error",
         position: "top",
-        text1: "❌ Duplicate Entry",
+        text1: "Duplicate Entry",
         text2: nameTaken
           ? "That name is already taken."
           : "That server is already added.",
@@ -199,7 +199,7 @@ export function useAccountsManager() {
 
     Toast.show({
       type: "success",
-      text1: "✅ Connected",
+      text1: "Connected",
       text2: "Account added successfully.",
     });
 
@@ -224,7 +224,7 @@ export function useAccountsManager() {
     Toast.show({
       type: "success",
       position: "top",
-      text1: "✅ Version Updated",
+      text1: "Version Updated",
       text2: `${accountName} updated to ${newVersion}`,
     });
   };
